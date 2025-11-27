@@ -33,6 +33,15 @@ async function getCredentials() {
 
 async function getUncachableSendGridClient() {
   const { apiKey, email } = await getCredentials();
+  
+  // Debug: Log API key format (first few characters only for security)
+  const keyPrefix = apiKey ? apiKey.substring(0, 10) : 'null';
+  console.log(`🔑 SendGrid API Key prefix: ${keyPrefix}...`);
+  
+  if (!apiKey || !apiKey.startsWith('SG.')) {
+    console.error(`API key does not start with "SG.".`);
+  }
+  
   sgMail.setApiKey(apiKey);
   return {
     client: sgMail,
