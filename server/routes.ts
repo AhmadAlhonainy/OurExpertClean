@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { createGoogleMeetMeeting } from "./googleCalendar";
+import { sendBookingConfirmationEmail, sendBookingRejectionEmail } from "./sendgrid";
 import { 
   insertExperienceSchema, 
   insertAvailabilitySchema, 
@@ -690,6 +691,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         meetingLink: meetingLink,
       });
       
+      // Send confirmation emails to both mentor and learner
+      try {
+        // Send email to learner
+        if (learner?.email) {
+          await sendBookingConfirmationEmail({
+            recipientEmail: learner.email,
+            recipientName: learner.name || 'المتعلم',
+            experienceTitle: experience?.title || 'تجربة',
+            mentorName: user?.name || 'المرشد',
+            learnerName: learner.name || 'المتعلم',
+            sessionDate: sessionDateFormatted,
+            meetingLink: meetingLink,
+            isMentor: false
+          });
+        }
+        
+        // Send email to mentor
+        if (user?.email) {
+          await sendBookingConfirmationEmail({
+            recipientEmail: user.email,
+            recipientName: user.name || 'المرشد',
+            experienceTitle: experience?.title || 'تجربة',
+            mentorName: user.name || 'المرشد',
+            learnerName: learner?.name || 'المتعلم',
+            sessionDate: sessionDateFormatted,
+            meetingLink: meetingLink,
+            isMentor: true
+          });
+        }
+        console.log('✅ Confirmation emails sent to both parties');
+      } catch (emailError) {
+        console.error('Error sending confirmation emails:', emailError);
+        // Continue even if email fails - booking is already confirmed
+      }
+      
       res.json({ 
         success: true, 
         booking: updated, 
@@ -730,6 +766,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (booking.status !== 'pending') {
         return res.status(400).json({ message: `Cannot reject booking with status: ${booking.status}` });
       }
+      
+      // Get experience and learner for email notification
+      const experience = await storage.getExperience(booking.experienceId);
+      const learner = await storage.getUser(booking.learnerId);
 
       // Update booking status to cancelled
       const updated = await storage.updateBooking(req.params.id, { 
@@ -751,6 +791,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error("Failed to refund payment:", refundError);
           // Continue with rejection even if refund fails - it can be handled manually
         }
+      }
+      
+      // Send rejection email to learner
+      try {
+        if (learner?.email) {
+          await sendBookingRejectionEmail({
+            recipientEmail: learner.email,
+            recipientName: learner.name || 'المتعلم',
+            experienceTitle: experience?.title || 'تجربة',
+            mentorName: user?.name || 'المرشد',
+            reason: reason
+          });
+          console.log('✅ Rejection email sent to learner');
+        }
+      } catch (emailError) {
+        console.error('Error sending rejection email:', emailError);
       }
       
       res.json({ success: true, booking: updated, message: "تم رفض الحجز وتحرير الموعد" });
