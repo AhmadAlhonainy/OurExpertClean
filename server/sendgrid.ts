@@ -165,6 +165,90 @@ ${data.meetingLink ? `\nرابط الاجتماع (Google Meet): ${data.meetingL
   }
 }
 
+export interface NewBookingNotificationData {
+  mentorEmail: string;
+  mentorName: string;
+  learnerName: string;
+  experienceTitle: string;
+  sessionDate: string;
+}
+
+export async function sendNewBookingNotificationToMentor(data: NewBookingNotificationData): Promise<boolean> {
+  try {
+    const { client, fromEmail } = await getUncachableSendGridClient();
+    
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; line-height: 1.8; color: #333; }
+        </style>
+      </head>
+      <body>
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="margin: 0;">مبروك! حجز جديد</h1>
+          </div>
+          <div style="background-color: #fff; padding: 30px; border: 1px solid #e0e0e0;">
+            <p>مرحباً ${data.mentorName}،</p>
+            <p style="font-size: 18px; color: #4CAF50; font-weight: bold;">لديك طلب حجز جديد!</p>
+            
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-right: 4px solid #4CAF50;">
+              <h3 style="margin-top: 0; color: #333;">تفاصيل الحجز</h3>
+              <p><strong>التجربة:</strong> ${data.experienceTitle}</p>
+              <p><strong>المتعلم:</strong> ${data.learnerName}</p>
+              <p><strong>موعد الجلسة:</strong> ${data.sessionDate}</p>
+            </div>
+            
+            <p>يرجى مراجعة الحجز وقبوله أو رفضه من لوحة التحكم الخاصة بك.</p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="https://wisdomconnect.replit.app/dashboard/mentor" style="background-color: #4CAF50; color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold; display: inline-block;">
+                مراجعة الحجز
+              </a>
+            </div>
+          </div>
+          <div style="background-color: #f5f5f5; padding: 20px; text-align: center; border-radius: 0 0 10px 10px;">
+            <p style="margin: 0; color: #666;">منصة WisdomConnect - نربط بين الخبراء والمتعلمين</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const textContent = `
+مرحباً ${data.mentorName}،
+
+مبروك! لديك طلب حجز جديد!
+
+تفاصيل الحجز:
+- التجربة: ${data.experienceTitle}
+- المتعلم: ${data.learnerName}
+- موعد الجلسة: ${data.sessionDate}
+
+يرجى مراجعة الحجز وقبوله أو رفضه من لوحة التحكم الخاصة بك.
+
+منصة WisdomConnect
+    `;
+
+    await client.send({
+      to: data.mentorEmail,
+      from: fromEmail,
+      subject: `مبروك! حجز جديد - ${data.experienceTitle}`,
+      text: textContent,
+      html: htmlContent,
+    });
+
+    console.log(`✅ New booking notification sent to mentor: ${data.mentorEmail}`);
+    return true;
+  } catch (error: any) {
+    console.error('Error sending new booking notification:', error);
+    return false;
+  }
+}
+
 export interface BookingRejectionEmailData {
   recipientEmail: string;
   recipientName: string;

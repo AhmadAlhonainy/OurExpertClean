@@ -5,7 +5,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { createGoogleMeetMeeting } from "./googleCalendar";
-import { sendBookingConfirmationEmail, sendBookingRejectionEmail } from "./sendgrid";
+import { sendBookingConfirmationEmail, sendBookingRejectionEmail, sendNewBookingNotificationToMentor } from "./sendgrid";
 import { 
   insertExperienceSchema, 
   insertAvailabilitySchema, 
@@ -580,6 +580,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // NOTE: Availability will be marked as booked only after payment is confirmed
       // This prevents blocking slots without payment
+      
+      // Send email notification to mentor about new booking
+      try {
+        const mentor = await storage.getUser(experience.mentorId);
+        const learner = await storage.getUser(userId);
+        
+        if (mentor?.email) {
+          const sessionDateFormatted = format(new Date(availability.date), "EEEE d MMMM yyyy - h:mm a", { locale: ar });
+          
+          await sendNewBookingNotificationToMentor({
+            mentorEmail: mentor.email,
+            mentorName: mentor.name || 'المرشد',
+            learnerName: learner?.name || 'المتعلم',
+            experienceTitle: experience.title,
+            sessionDate: sessionDateFormatted,
+          });
+          console.log(`📧 New booking notification sent to mentor: ${mentor.email}`);
+        }
+      } catch (emailError) {
+        console.error("Error sending new booking notification email:", emailError);
+        // Don't fail the booking creation if email fails
+      }
       
       res.status(201).json(booking);
     } catch (error) {
