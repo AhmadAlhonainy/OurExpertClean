@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: wisdom-connect
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: ISSUER_URL
+        sync: false
+      - key: CLIENT_ID
+        sync: false
+      - key: CLIENT_SECRET
+        sync: false
+
+databases:
+  - name: wisdom-connect-db
+    databaseName: wisdomconnect
+    plan: free
+    region: oregon
