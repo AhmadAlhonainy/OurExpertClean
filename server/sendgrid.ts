@@ -1,51 +1,29 @@
-// SendGrid Email Service - Using Replit SendGrid Integration
+// SendGrid Email Service - Using Environment Variable
 import sgMail from '@sendgrid/mail';
 
-let connectionSettings: any;
+// Default from email - can be overridden by SENDGRID_FROM_EMAIL env var
+const DEFAULT_FROM_EMAIL = 'noreply@wisdomconnect.com';
 
-async function getCredentials() {
-  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
-  const xReplitToken = process.env.REPL_IDENTITY 
-    ? 'repl ' + process.env.REPL_IDENTITY 
-    : process.env.WEB_REPL_RENEWAL 
-    ? 'depl ' + process.env.WEB_REPL_RENEWAL 
-    : null;
-
-  if (!xReplitToken) {
-    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
+function getSendGridClient() {
+  const apiKey = process.env.SENDGRID_API_KEY;
+  const fromEmail = process.env.SENDGRID_FROM_EMAIL || DEFAULT_FROM_EMAIL;
+  
+  if (!apiKey) {
+    throw new Error('SENDGRID_API_KEY environment variable is not set');
   }
-
-  connectionSettings = await fetch(
-    'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=sendgrid',
-    {
-      headers: {
-        'Accept': 'application/json',
-        'X_REPLIT_TOKEN': xReplitToken
-      }
-    }
-  ).then(res => res.json()).then(data => data.items?.[0]);
-
-  if (!connectionSettings || (!connectionSettings.settings.api_key || !connectionSettings.settings.from_email)) {
-    throw new Error('SendGrid not connected');
-  }
-  return { apiKey: connectionSettings.settings.api_key, email: connectionSettings.settings.from_email };
-}
-
-async function getUncachableSendGridClient() {
-  const { apiKey, email } = await getCredentials();
   
   // Debug: Log API key format (first few characters only for security)
-  const keyPrefix = apiKey ? apiKey.substring(0, 10) : 'null';
+  const keyPrefix = apiKey.substring(0, 10);
   console.log(`🔑 SendGrid API Key prefix: ${keyPrefix}...`);
   
-  if (!apiKey || !apiKey.startsWith('SG.')) {
-    console.error(`API key does not start with "SG.".`);
+  if (!apiKey.startsWith('SG.')) {
+    console.error(`⚠️ Warning: API key does not start with "SG." - this may not be a valid SendGrid API key`);
   }
   
   sgMail.setApiKey(apiKey);
   return {
     client: sgMail,
-    fromEmail: email
+    fromEmail: fromEmail
   };
 }
 
@@ -62,7 +40,7 @@ export interface BookingConfirmationEmailData {
 
 export async function sendBookingConfirmationEmail(data: BookingConfirmationEmailData): Promise<boolean> {
   try {
-    const { client, fromEmail } = await getUncachableSendGridClient();
+    const { client, fromEmail } = getSendGridClient();
     
     const subject = data.isMentor 
       ? `تأكيد الحجز - جلسة مع ${data.learnerName}`
@@ -184,7 +162,7 @@ export interface NewBookingNotificationData {
 
 export async function sendNewBookingNotificationToMentor(data: NewBookingNotificationData): Promise<boolean> {
   try {
-    const { client, fromEmail } = await getUncachableSendGridClient();
+    const { client, fromEmail } = getSendGridClient();
     
     const htmlContent = `
       <!DOCTYPE html>
@@ -268,7 +246,7 @@ export interface BookingRejectionEmailData {
 
 export async function sendBookingRejectionEmail(data: BookingRejectionEmailData): Promise<boolean> {
   try {
-    const { client, fromEmail } = await getUncachableSendGridClient();
+    const { client, fromEmail } = getSendGridClient();
     
     const htmlContent = `
       <!DOCTYPE html>
