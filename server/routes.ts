@@ -240,11 +240,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || user.role !== 'mentor') {
-        return res.status(403).json({ message: "Only mentors can access their experiences" });
+      if (!user || (user.role !== 'mentor' && user.role !== 'admin')) {
+        return res.status(403).json({ message: "Only mentors and admins can access their experiences" });
       }
 
-      // Get all experiences for this mentor (pending, approved, rejected)
+      // Get all experiences for this mentor/admin (pending, approved, rejected)
       const experiences = await storage.getExperiences({ mentorId: userId });
       res.json(experiences);
     } catch (error) {
@@ -624,10 +624,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       
-      // Verify user is actually a mentor
+      // Verify user is actually a mentor or admin
       const user = await storage.getUser(userId);
-      if (!user || user.role !== 'mentor') {
-        return res.status(403).json({ message: "Only mentors can accept bookings" });
+      if (!user || (user.role !== 'mentor' && user.role !== 'admin')) {
+        return res.status(403).json({ message: "Only mentors or admins can accept bookings" });
       }
       
       const booking = await storage.getBooking(req.params.id);
@@ -636,8 +636,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Booking not found" });
       }
       
-      // Only the mentor who owns this booking can accept it
-      if (booking.mentorId !== userId) {
+      // Only the mentor who owns this booking or an admin can accept it
+      if (booking.mentorId !== userId && user.role !== 'admin') {
         return res.status(403).json({ message: "Only the mentor can accept this booking" });
       }
       
@@ -773,10 +773,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const { reason } = req.body;
       
-      // Verify user is actually a mentor
+      // Verify user is actually a mentor or admin
       const user = await storage.getUser(userId);
-      if (!user || user.role !== 'mentor') {
-        return res.status(403).json({ message: "Only mentors can reject bookings" });
+      if (!user || (user.role !== 'mentor' && user.role !== 'admin')) {
+        return res.status(403).json({ message: "Only mentors or admins can reject bookings" });
       }
       
       const booking = await storage.getBooking(req.params.id);
@@ -785,8 +785,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Booking not found" });
       }
       
-      // Only the mentor who owns this booking can reject it
-      if (booking.mentorId !== userId) {
+      // Only the mentor who owns this booking or an admin can reject it
+      if (booking.mentorId !== userId && user.role !== 'admin') {
         return res.status(403).json({ message: "Only the mentor can reject this booking" });
       }
       
@@ -1006,11 +1006,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "المستخدم غير موجود" });
       }
 
-      if (user.role !== 'mentor') {
-        return res.status(403).json({ message: "هذه الخدمة متاحة للمرشدين فقط" });
+      if (user.role !== 'mentor' && user.role !== 'admin') {
+        return res.status(403).json({ message: "هذه الخدمة متاحة للمرشدين والمسؤولين فقط" });
       }
 
-      // Check if mentor has Stripe account
+      // Check if mentor/admin has Stripe account
       if (!user.stripeAccountId) {
         return res.json({
           connected: false,
