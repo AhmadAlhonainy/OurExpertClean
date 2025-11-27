@@ -1676,6 +1676,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // PATCH /api/admin/users/:id/role - Update user role (admin only)
+  app.patch('/api/admin/users/:id/role', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { role } = req.body;
+      const userId = req.params.id;
+      
+      if (!['admin', 'mentor', 'learner'].includes(role)) {
+        return res.status(400).json({ message: "الدور غير صالح" });
+      }
+      
+      const updated = await storage.updateUser(userId, { role });
+      
+      if (!updated) {
+        return res.status(404).json({ message: "المستخدم غير موجود" });
+      }
+      
+      res.json({ success: true, user: updated });
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      res.status(500).json({ message: "فشل تحديث دور المستخدم" });
+    }
+  });
+
   // GET /api/admin/experiences - Get all experiences
   app.get('/api/admin/experiences', isAuthenticated, isAdmin, async (req: any, res) => {
     try {

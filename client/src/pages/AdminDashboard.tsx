@@ -129,6 +129,21 @@ export default function AdminDashboard() {
     },
   });
 
+  // Update User Role Mutation
+  const updateUserRoleMutation = useMutation({
+    mutationFn: async ({ id, role }: { id: string; role: string }) => {
+      const response = await apiRequest('PATCH', `/api/admin/users/${id}/role`, { role });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({ title: "تم تحديث دور المستخدم بنجاح" });
+    },
+    onError: () => {
+      toast({ title: "فشل تحديث دور المستخدم", variant: "destructive" });
+    },
+  });
+
   if (userLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -330,20 +345,39 @@ export default function AdminDashboard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {allUsers.map((user) => (
-                        <TableRow key={user.id} data-testid={`row-user-${user.id}`}>
-                          <TableCell className="font-medium">{user.name || 'غير معروف'}</TableCell>
-                          <TableCell>{user.email}</TableCell>
+                      {allUsers.map((u) => (
+                        <TableRow key={u.id} data-testid={`row-user-${u.id}`}>
+                          <TableCell className="font-medium">{u.name || 'غير معروف'}</TableCell>
+                          <TableCell>{u.email}</TableCell>
                           <TableCell>
-                            <Badge variant={
-                              user.role === 'admin' ? 'default' :
-                              user.role === 'mentor' ? 'secondary' : 'outline'
-                            }>
-                              {user.role === 'admin' ? 'إداري' :
-                               user.role === 'mentor' ? 'مرشد' : 'متعلم'}
-                            </Badge>
+                            <Select
+                              value={u.role}
+                              onValueChange={(newRole) => {
+                                if (u.id === user?.id) {
+                                  toast({ 
+                                    title: "لا يمكنك تغيير دورك الخاص", 
+                                    variant: "destructive" 
+                                  });
+                                  return;
+                                }
+                                updateUserRoleMutation.mutate({ id: u.id, role: newRole });
+                              }}
+                              disabled={updateUserRoleMutation.isPending || u.id === user?.id}
+                            >
+                              <SelectTrigger 
+                                className="w-32" 
+                                data-testid={`select-role-${u.id}`}
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="admin">إداري</SelectItem>
+                                <SelectItem value="mentor">مرشد</SelectItem>
+                                <SelectItem value="learner">متعلم</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </TableCell>
-                          <TableCell>{new Date(user.createdAt).toLocaleDateString('ar-SA')}</TableCell>
+                          <TableCell>{new Date(u.createdAt).toLocaleDateString('ar-SA')}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
