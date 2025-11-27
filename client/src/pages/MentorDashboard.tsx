@@ -80,12 +80,12 @@ export default function MentorDashboard() {
 
   const { data: experiences, isLoading: experiencesLoading } = useQuery<Experience[]>({
     queryKey: ['/api/my-experiences'],
-    enabled: isAuthenticated && user?.role === 'mentor',
+    enabled: isAuthenticated && (user?.role === 'mentor' || user?.role === 'admin'),
   });
 
   const { data: stripeStatus } = useQuery<StripeConnectStatus>({
     queryKey: ['/api/stripe/connect/status'],
-    enabled: isAuthenticated && user?.role === 'mentor',
+    enabled: isAuthenticated && (user?.role === 'mentor' || user?.role === 'admin'),
   });
 
   const acceptMutation = useMutation({

@@ -465,8 +465,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       let bookings;
-      if (user.role === 'mentor') {
-        bookings = await storage.getBookingsByMentor(userId);
+      if (user.role === 'mentor' || user.role === 'admin') {
+        // For mentors and admins, get bookings where they are the mentor
+        const mentorBookings = await storage.getBookingsByMentor(userId);
+        const learnerBookings = await storage.getBookingsByLearner(userId);
+        // Combine both and remove duplicates
+        const allBookingsMap = new Map();
+        [...mentorBookings, ...learnerBookings].forEach(b => allBookingsMap.set(b.id, b));
+        bookings = Array.from(allBookingsMap.values());
       } else {
         bookings = await storage.getBookingsByLearner(userId);
       }

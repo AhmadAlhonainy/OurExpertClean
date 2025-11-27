@@ -157,10 +157,10 @@ export default function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                   
-                  {user?.role === 'mentor' && (
+                  {(user?.role === 'mentor' || user?.role === 'admin') && (
                     <>
                       <DropdownMenuItem className="text-right cursor-pointer" asChild>
-                        <Link href="/dashboard/mentor">
+                        <Link href="/dashboard/mentor" data-testid="link-mentor-dashboard">
                           لوحة المرشد
                         </Link>
                       </DropdownMenuItem>
