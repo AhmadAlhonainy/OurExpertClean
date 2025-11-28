@@ -332,6 +332,12 @@ export async function sendPasswordResetEmail(data: PasswordResetEmailData): Prom
   try {
     const { client, fromEmail } = getSendGridClient();
     
+    // Validate email first
+    if (!data.recipientEmail || typeof data.recipientEmail !== 'string') {
+      console.error(`❌ Invalid recipient email: ${data.recipientEmail}`);
+      return false;
+    }
+    
     const htmlContent = `
       <!DOCTYPE html>
       <html dir="rtl" lang="ar">
@@ -408,7 +414,10 @@ ${data.resetLink}
     console.log(`✅ Password reset email sent to ${trimmedEmail}`);
     return true;
   } catch (error: any) {
-    console.error('Error sending password reset email:', error);
+    console.error('❌ Error sending password reset email:', error.message || error);
+    if (error.response?.body?.errors) {
+      console.error('SendGrid errors:', error.response.body.errors);
+    }
     return false;
   }
 }
