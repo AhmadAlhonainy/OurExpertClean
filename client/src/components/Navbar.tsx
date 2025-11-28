@@ -229,13 +229,54 @@ export default function Navbar() {
             <Button variant="ghost" className="w-full justify-start" asChild>
               <Link href="/become-mentor">كن مرشداً</Link>
             </Button>
-            <Button variant="ghost" className="w-full justify-start">
-              <User className="w-5 h-5 ml-2" />
-              الملف الشخصي
-            </Button>
-            <Button variant="default" className="w-full">
-              تسجيل الدخول
-            </Button>
+            {isAuthenticated ? (
+              <>
+                <Button variant="ghost" className="w-full justify-start" asChild>
+                  <Link href="/messages">
+                    <MessageCircle className="w-5 h-5 ml-2" />
+                    الرسائل
+                    {unreadData?.unreadCount && unreadData.unreadCount > 0 && (
+                      <Badge variant="destructive" className="text-xs mr-auto">
+                        {unreadData.unreadCount}
+                      </Badge>
+                    )}
+                  </Link>
+                </Button>
+                <Button variant="ghost" className="w-full justify-start" asChild>
+                  <Link href="/dashboard/learner">
+                    <User className="w-5 h-5 ml-2" />
+                    متابعة جلساتي
+                  </Link>
+                </Button>
+                {(user?.role === 'mentor' || user?.role === 'admin') && (
+                  <Button variant="ghost" className="w-full justify-start" asChild>
+                    <Link href="/dashboard/mentor">
+                      لوحة المرشد
+                    </Link>
+                  </Button>
+                )}
+                {user?.role === 'admin' && (
+                  <Button variant="ghost" className="w-full justify-start" asChild>
+                    <Link href="/dashboard/admin">
+                      لوحة الإدارة
+                    </Link>
+                  </Button>
+                )}
+                <Button 
+                  variant="destructive" 
+                  className="w-full"
+                  onClick={handleLogout}
+                  data-testid="button-logout-mobile"
+                >
+                  <LogOut className="w-5 h-5 ml-2" />
+                  تسجيل الخروج
+                </Button>
+              </>
+            ) : (
+              <Button variant="default" className="w-full" asChild data-testid="button-signin-mobile">
+                <Link href="/signin">تسجيل الدخول</Link>
+              </Button>
+            )}
           </div>
         )}
       </div>
