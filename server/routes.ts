@@ -2168,6 +2168,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Broadcast to WebSocket clients in this conversation
       broadcastToConversation(conversation.id, {
         type: 'new_message',
+        conversationId: conversation.id,
+        senderId: userId,
         message: message,
       });
       
@@ -2176,6 +2178,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       broadcastToUser(otherUserId, {
         type: 'new_message',
         conversationId: conversation.id,
+        senderId: userId,
         message: message,
       });
       

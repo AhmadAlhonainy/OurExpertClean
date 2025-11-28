@@ -76,6 +76,32 @@ export default function Messages() {
     },
   });
 
+  // Play notification sound
+  const playNotificationSound = useCallback(() => {
+    try {
+      // Create a simple beep sound using Web Audio API
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Set frequency for a pleasant notification tone
+      oscillator.frequency.value = 800; // Hz
+      oscillator.type = 'sine';
+      
+      // Set timing for a short, quiet beep
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime); // Volume: 30%
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    } catch (error) {
+      console.log("Audio notification not available");
+    }
+  }, []);
+
   // Setup WebSocket connection
   useEffect(() => {
     if (!user) return;
@@ -94,7 +120,12 @@ export default function Messages() {
       const data = JSON.parse(event.data);
       
       if (data.type === "new_message") {
-        // Refresh conversations and current conversation
+        // Play notification sound for new messages from others
+        if (data.senderId !== user.id) {
+          playNotificationSound();
+        }
+        
+        // Refresh conversations and current conversation immediately
         queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
         if (selectedConversation && data.conversationId === selectedConversation.id) {
           refetchConversation();
@@ -113,7 +144,7 @@ export default function Messages() {
     return () => {
       ws.close();
     };
-  }, [user]);
+  }, [user, selectedConversation, playNotificationSound]);
 
   // Join/leave conversation rooms
   useEffect(() => {
