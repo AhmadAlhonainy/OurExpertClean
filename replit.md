@@ -48,6 +48,22 @@ Preferred communication style: Simple, everyday language.
 -   **Intelligent Search Engine:** ChatGPT-style search box, natural language queries across titles, descriptions, categories, cities, learning points. Supports exact phrase matching, word search (excluding stop words), and a fallback to random experiences.
 -   **Stripe Connect Onboarding:** Dedicated page and API for mentors to connect Stripe accounts, manage status, and access dashboards. Enforced during experience creation.
 -   **Availability Management System:** Secure creation and management of mentor availability slots with authorization checks and prevention of duplicate entries.
+-   **Real-time Messaging:** WebSocket-based instant messaging between mentors and learners with typing indicators and message notifications.
+-   **Password Reset:** Secure password reset via email with 1-hour expiring tokens, full Arabic RTL support.
+
+### Email Configuration (SendGrid)
+
+**Important:** For password reset and booking notification emails to work:
+1. Sender email is set to: `noreply@wisdomconnect.com`
+2. **You must verify this sender in SendGrid:**
+   - Go to SendGrid dashboard → Settings → Sender Authentication
+   - Choose "Domain Authentication" (verify `wisdomconnect.com`) OR "Single Sender Verification" (verify `noreply@wisdomconnect.com` email)
+   - Follow SendGrid's verification process
+   - Once verified, all transactional emails will send successfully
+
+**API Keys:**
+- `SENDGRID_API_KEY`: Stored as secret (managed by Replit)
+- `SENDGRID_FROM_EMAIL`: Defaults to `noreply@wisdomconnect.com`, can be overridden via environment variable
 
 ## External Dependencies
 
@@ -76,3 +92,35 @@ Preferred communication style: Simple, everyday language.
 ### Font Resources
 
 -   **Google Fonts:** Inter (UI/body), Sora (display/headings).
+
+## Recent Enhancements (Nov 28, 2025)
+
+### Email System Fixes
+- Fixed SendGrid configuration: removed incorrect `SENDGRID_FROM_EMAIL` secret that contained API key
+- Added email validation and sanitization in all email functions
+- Enhanced error logging for SendGrid failures
+- Password reset emails now have proper validation before sending
+
+### Real-time Messaging
+- Implemented WebSocket for instant message delivery (no page refresh needed)
+- Added notification sound for incoming messages (quiet, 100ms beep at 800Hz, 30% volume)
+- Fixed WebSocket message broadcasting to include `senderId` for proper sound triggering
+- Message updates now happen immediately across all connected clients
+
+### Admin Access
+- Added `eng.abomoqpel@gmail.com` to admin users with full platform access
+
+## Development Notes
+
+**SendGrid Integration:**
+- All emails (password reset, booking notifications, confirmations) use SendGrid
+- Sender must be verified in SendGrid account for delivery
+- Email validation prevents invalid addresses from being sent
+- Enhanced error logging shows SendGrid-specific error details
+
+**WebSocket Real-time Features:**
+- Conversation-room based architecture
+- User connections and conversation subscriptions tracked
+- Typing indicators broadcast to conversation room
+- New messages broadcast to sender and recipient with user ID for audio notification
+- Auto-reconnection handled at client level
