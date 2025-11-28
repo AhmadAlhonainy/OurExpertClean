@@ -141,14 +141,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Sign In endpoint
-  // ⚠️ TESTING MODE: Email-only login - REMOVE BEFORE PRODUCTION! ⚠️
+  // Sign In endpoint - Production mode with email and password
   app.post('/api/signin', async (req, res) => {
     try {
-      const { email } = req.body;
+      const { email, password } = req.body;
       
-      if (!email) {
-        return res.status(400).json({ message: "البريد الإلكتروني مطلوب" });
+      if (!email || !password) {
+        return res.status(400).json({ message: "البريد الإلكتروني وكلمة المرور مطلوبان" });
       }
 
       console.log(`🔑 Signin attempt for email: ${email}`);
@@ -156,12 +155,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Find user by email
       let user = await storage.getUserByEmail(email);
       if (!user) {
-        return res.status(401).json({ message: "المستخدم غير موجود. يرجى التسجيل أولاً" });
+        return res.status(401).json({ message: "البريد الإلكتروني أو كلمة المرور غير صحيحة" });
       }
 
       console.log(`👤 Found user: ID=${user.id}, Role=${user.role}`);
 
-      // ⚠️ TESTING: Password check skipped - RESTORE BEFORE PRODUCTION!
+      // Verify password
+      if (!user.passwordHash) {
+        return res.status(401).json({ message: "هذا الحساب مسجّل عبر Google. الرجاء استخدام تسجيل الدخول بـ Google" });
+      }
+
+      const isPasswordValid = await bcryptjs.compare(password, user.passwordHash);
+      if (!isPasswordValid) {
+        console.log(`❌ Invalid password for user: ${email}`);
+        return res.status(401).json({ message: "البريد الإلكتروني أو كلمة المرور غير صحيحة" });
+      }
+
+      console.log(`✅ Password verified for user: ${email}`);
 
       // Check if this email should be an admin and update role if needed
       const isAdmin = await storage.isAdminEmail(email);

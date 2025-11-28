@@ -46,14 +46,13 @@ export default function SignIn() {
     window.location.href = "/api/login";
   };
 
-  // ⚠️ TESTING MODE: Email-only login - RESTORE PASSWORD CHECK BEFORE PRODUCTION!
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!signInEmail) {
+    if (!signInEmail || !signInPassword) {
       toast({
         title: "خطأ",
-        description: "الرجاء إدخال البريد الإلكتروني",
+        description: "الرجاء إدخال البريد الإلكتروني وكلمة المرور",
         variant: "destructive",
       });
       return;
@@ -64,7 +63,7 @@ export default function SignIn() {
       const response = await fetch("/api/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: signInEmail }),
+        body: JSON.stringify({ email: signInEmail, password: signInPassword }),
       });
 
       if (response.ok) {
@@ -203,15 +202,8 @@ export default function SignIn() {
               </TabsTrigger>
             </TabsList>
 
-            {/* Sign In Tab - TESTING MODE: Email only */}
+            {/* Sign In Tab */}
             <TabsContent value="signin" className="space-y-4 mt-4">
-              {/* ⚠️ Testing Mode Notice */}
-              <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 text-sm">
-                <p className="text-yellow-800 dark:text-yellow-200 text-center">
-                  <strong>وضع الاختبار:</strong> تسجيل الدخول بالبريد الإلكتروني فقط
-                </p>
-              </div>
-              
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signin-email">البريد الإلكتروني</Label>
@@ -227,7 +219,19 @@ export default function SignIn() {
                   />
                 </div>
 
-                {/* Password field hidden for testing - RESTORE BEFORE PRODUCTION! */}
+                <div className="space-y-2">
+                  <Label htmlFor="signin-password">كلمة المرور</Label>
+                  <Input
+                    id="signin-password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={signInPassword}
+                    onChange={(e) => setSignInPassword(e.target.value)}
+                    disabled={signInLoading || googleLoading}
+                    data-testid="input-signin-password"
+                    className="text-right"
+                  />
+                </div>
 
                 <Button
                   type="submit"
