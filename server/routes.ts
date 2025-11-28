@@ -5,7 +5,8 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { createGoogleMeetMeeting } from "./googleCalendar";
-import { sendBookingConfirmationEmail, sendBookingRejectionEmail, sendNewBookingNotificationToMentor } from "./sendgrid";
+import { sendBookingConfirmationEmail, sendBookingRejectionEmail, sendNewBookingNotificationToMentor, sendPasswordResetEmail } from "./sendgrid";
+import crypto from "crypto";
 import { 
   insertExperienceSchema, 
   insertAvailabilitySchema, 
@@ -217,6 +218,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Sign in error:", error);
       res.status(500).json({ message: "Failed to sign in" });
+    }
+  });
+
+  // Forgot Password - Request reset link
+  app.post('/api/auth/forgot-password', async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "البريد الإلكتروني مطلوب" });
+      }
+
+      console.log(`🔑 Password reset request for email: ${email}`);
+
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      
+      // Always return success to prevent email enumeration
+      if (!user) {
+        console.log(`⚠️ Password reset requested for non-existent email: ${email}`);
+        return res.json({ success: true, message: "إذا كان البريد الإلكتروني مسجلاً، ستتلقى رابط إعادة تعيين كلمة المرور" });
+      }
+
+      // Check if user uses Google auth (no password)
+      if (!user.passwordHash) {
+        console.log(`⚠️ Password reset requested for Google-only account: ${email}`);
+        return res.json({ success: true, message: "إذا كان البريد الإلكتروني مسجلاً، ستتلقى رابط إعادة تعيين كلمة المرور" });
+      }
+
+      // Generate reset token
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const resetTokenExpires = new Date(Date.now() + 3600000); // 1 hour from now
+
+      // Save token to user
+      await storage.updateUser(user.id, {
+        resetToken,
+        resetTokenExpires,
+      } as any);
+
+      // Build reset link
+      const baseUrl = process.env.REPLIT_DEV_DOMAIN 
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+        : 'http://localhost:5000';
+      const resetLink = `${baseUrl}/reset-password?token=${resetToken}`;
+
+      // Send email
+      const emailSent = await sendPasswordResetEmail({
+        recipientEmail: email,
+        recipientName: user.name || 'المستخدم',
+        resetLink,
+      });
+
+      if (!emailSent) {
+        console.error(`❌ Failed to send password reset email to ${email}`);
+        return res.status(500).json({ message: "فشل إرسال البريد الإلكتروني. يرجى المحاولة لاحقاً" });
+      }
+
+      console.log(`✅ Password reset email sent to ${email}`);
+      res.json({ success: true, message: "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني" });
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      res.status(500).json({ message: "حدث خطأ. يرجى المحاولة لاحقاً" });
+    }
+  });
+
+  // Reset Password - Verify token and set new password
+  app.post('/api/auth/reset-password', async (req, res) => {
+    try {
+      const { token, password } = req.body;
+      
+      if (!token || !password) {
+        return res.status(400).json({ message: "التوكن وكلمة المرور مطلوبان" });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ message: "يجب أن تكون كلمة المرور 6 أحرف على الأقل" });
+      }
+
+      console.log(`🔑 Password reset attempt with token`);
+
+      // Find user by reset token
+      const user = await storage.getUserByResetToken(token);
+      
+      if (!user) {
+        console.log(`❌ Invalid or expired reset token`);
+        return res.status(400).json({ message: "رابط إعادة تعيين كلمة المرور غير صالح أو منتهي الصلاحية" });
+      }
+
+      // Check if token is expired
+      if (user.resetTokenExpires && new Date() > new Date(user.resetTokenExpires)) {
+        console.log(`❌ Expired reset token for user: ${user.email}`);
+        return res.status(400).json({ message: "رابط إعادة تعيين كلمة المرور منتهي الصلاحية" });
+      }
+
+      // Hash new password
+      const passwordHash = await bcryptjs.hash(password, 10);
+
+      // Update password and clear reset token
+      await storage.updateUser(user.id, {
+        passwordHash,
+        resetToken: null,
+        resetTokenExpires: null,
+      } as any);
+
+      console.log(`✅ Password reset successful for user: ${user.email}`);
+      res.json({ success: true, message: "تم تغيير كلمة المرور بنجاح" });
+    } catch (error) {
+      console.error("Reset password error:", error);
+      res.status(500).json({ message: "حدث خطأ. يرجى المحاولة لاحقاً" });
     }
   });
 

@@ -28,6 +28,8 @@ export const users = pgTable("users", {
   name: text("name"),
   profileImage: text("profile_image"),
   passwordHash: text("password_hash"), // For email/password auth (optional - null if OAuth)
+  resetToken: text("reset_token"), // For password reset
+  resetTokenExpires: timestamp("reset_token_expires"), // When reset token expires
   role: userRoleEnum("role").notNull().default("learner"),
   bio: text("bio"),
   phoneNumber: text("phone_number"),

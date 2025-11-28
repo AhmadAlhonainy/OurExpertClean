@@ -220,7 +220,18 @@ export default function SignIn() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="signin-password">كلمة المرور</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="signin-password">كلمة المرور</Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="px-0 text-sm text-muted-foreground h-auto hover:bg-transparent hover:underline"
+                      onClick={() => setLocation("/forgot-password")}
+                      data-testid="link-forgot-password"
+                    >
+                      نسيت كلمة المرور؟
+                    </Button>
+                  </div>
                   <Input
                     id="signin-password"
                     type="password"

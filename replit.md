@@ -39,6 +39,7 @@ Preferred communication style: Simple, everyday language.
 ### Authentication & Authorization
 
 -   **Methods:** Email/Password (bcrypt hashing) and Google OAuth (via Replit Auth/OpenID Connect).
+-   **Password Reset:** Complete forgot/reset password flow with secure tokens (1-hour expiry), SendGrid email delivery, and Arabic RTL UI support.
 -   **Session Management:** PostgreSQL storage via `connect-pg-simple`, 7-day TTL, HTTP-only cookies, secure flag, CSRF protection.
 -   **Authorization:** Middleware for route protection, ownership verification for sensitive data.
 

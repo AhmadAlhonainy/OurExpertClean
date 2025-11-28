@@ -288,3 +288,85 @@ export async function sendBookingRejectionEmail(data: BookingRejectionEmailData)
     return false;
   }
 }
+
+export interface PasswordResetEmailData {
+  recipientEmail: string;
+  recipientName: string;
+  resetLink: string;
+}
+
+export async function sendPasswordResetEmail(data: PasswordResetEmailData): Promise<boolean> {
+  try {
+    const { client, fromEmail } = getSendGridClient();
+    
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; line-height: 1.8; color: #333; }
+        </style>
+      </head>
+      <body>
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="margin: 0;">إعادة تعيين كلمة المرور</h1>
+          </div>
+          <div style="background-color: #fff; padding: 30px; border: 1px solid #e0e0e0;">
+            <p>مرحباً ${data.recipientName}،</p>
+            <p>لقد طلبت إعادة تعيين كلمة المرور الخاصة بحسابك في منصة الخبرات.</p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${data.resetLink}" style="background-color: #667eea; color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold; display: inline-block;">
+                إعادة تعيين كلمة المرور
+              </a>
+            </div>
+            
+            <p style="color: #666; font-size: 14px;">
+              هذا الرابط صالح لمدة ساعة واحدة فقط. إذا لم تطلب إعادة تعيين كلمة المرور، يمكنك تجاهل هذه الرسالة.
+            </p>
+            
+            <p style="color: #999; font-size: 12px; margin-top: 20px;">
+              إذا لم يعمل الزر، انسخ الرابط التالي في متصفحك:<br>
+              <a href="${data.resetLink}" style="color: #667eea; word-break: break-all;">${data.resetLink}</a>
+            </p>
+          </div>
+          <div style="background-color: #f5f5f5; padding: 20px; text-align: center; border-radius: 0 0 10px 10px;">
+            <p style="margin: 0; color: #666;">منصة الخبرات - نربط بين الخبراء والمتعلمين</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const textContent = `
+مرحباً ${data.recipientName}،
+
+لقد طلبت إعادة تعيين كلمة المرور الخاصة بحسابك في منصة الخبرات.
+
+لإعادة تعيين كلمة المرور، اضغط على الرابط التالي:
+${data.resetLink}
+
+هذا الرابط صالح لمدة ساعة واحدة فقط.
+
+إذا لم تطلب إعادة تعيين كلمة المرور، يمكنك تجاهل هذه الرسالة.
+
+منصة الخبرات
+    `;
+
+    await client.send({
+      to: data.recipientEmail,
+      from: fromEmail,
+      subject: 'إعادة تعيين كلمة المرور - منصة الخبرات',
+      text: textContent,
+      html: htmlContent,
+    });
+
+    console.log(`✅ Password reset email sent to ${data.recipientEmail}`);
+    return true;
+  } catch (error: any) {
+    console.error('Error sending password reset email:', error);
+    return false;
+  }
+}

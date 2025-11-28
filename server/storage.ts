@@ -40,6 +40,7 @@ export interface IStorage {
   
   // Additional user operations
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByResetToken(token: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, user: Partial<InsertUser>): Promise<User | undefined>;
 
@@ -177,6 +178,8 @@ export class MemStorage implements IStorage {
       name: userData.name ?? existing?.name ?? null,
       profileImage: userData.profileImage ?? existing?.profileImage ?? null,
       passwordHash: userData.passwordHash ?? existing?.passwordHash ?? null,
+      resetToken: (userData as any).resetToken ?? existing?.resetToken ?? null,
+      resetTokenExpires: (userData as any).resetTokenExpires ?? existing?.resetTokenExpires ?? null,
       role: existing?.role ?? userData.role ?? "learner",
       bio: userData.bio ?? existing?.bio ?? null,
       phoneNumber: userData.phoneNumber ?? existing?.phoneNumber ?? null,
@@ -193,6 +196,10 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).find((user) => user.email === email);
   }
 
+  async getUserByResetToken(token: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find((user) => (user as any).resetToken === token);
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
     const user: User = {
@@ -201,6 +208,8 @@ export class MemStorage implements IStorage {
       name: insertUser.name ?? null,
       profileImage: insertUser.profileImage ?? null,
       passwordHash: insertUser.passwordHash ?? null,
+      resetToken: null,
+      resetTokenExpires: null,
       role: insertUser.role ?? "learner",
       bio: insertUser.bio ?? null,
       phoneNumber: insertUser.phoneNumber ?? null,
@@ -801,6 +810,11 @@ export class DbStorage implements IStorage {
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     const result = await this.database.select().from(users).where(eq(users.email, email)).limit(1);
+    return result[0];
+  }
+
+  async getUserByResetToken(token: string): Promise<User | undefined> {
+    const result = await this.database.select().from(users).where(eq(users.resetToken, token)).limit(1);
     return result[0];
   }
 

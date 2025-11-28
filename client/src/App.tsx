@@ -15,6 +15,8 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import ManagerDashboard from "@/pages/ManagerDashboard";
 import BookExperience from "@/pages/BookExperience";
 import SignIn from "@/pages/SignIn";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
 import RoleSelection from "@/pages/RoleSelection";
 import Messages from "@/pages/Messages";
 import NotFound from "@/pages/not-found";
@@ -24,6 +26,8 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/signin" component={SignIn} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route path="/role-selection" component={RoleSelection} />
       <Route path="/experiences" component={BookExperience} />
       <Route path="/become-mentor" component={CreateExperience} />
