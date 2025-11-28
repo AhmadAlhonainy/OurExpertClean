@@ -136,15 +136,24 @@ ${data.meetingLink ? `\nرابط الاجتماع (Google Meet): ${data.meetingL
 منصة WisdomConnect
     `;
 
+    // Trim email and validate before sending
+    const trimmedEmail = data.recipientEmail.trim().toLowerCase();
+    
+    if (!trimmedEmail.includes('@') || !trimmedEmail.includes('.')) {
+      console.error(`❌ Invalid recipient email format: ${data.recipientEmail}`);
+      return false;
+    }
+    
     await client.send({
-      to: data.recipientEmail,
+      to: trimmedEmail,
       from: fromEmail,
       subject: subject,
       text: textContent,
       html: htmlContent,
+      replyTo: fromEmail,
     });
 
-    console.log(`✅ Email sent successfully to ${data.recipientEmail}`);
+    console.log(`✅ Email sent successfully to ${trimmedEmail}`);
     return true;
   } catch (error: any) {
     console.error('Error sending email:', error);
@@ -163,6 +172,12 @@ export interface NewBookingNotificationData {
 export async function sendNewBookingNotificationToMentor(data: NewBookingNotificationData): Promise<boolean> {
   try {
     const { client, fromEmail } = getSendGridClient();
+    
+    // Validate email addresses
+    if (!data.mentorEmail || !data.mentorEmail.includes('@')) {
+      console.error(`❌ Invalid mentor email: ${data.mentorEmail}`);
+      return false;
+    }
     
     const htmlContent = `
       <!DOCTYPE html>
@@ -220,15 +235,24 @@ export async function sendNewBookingNotificationToMentor(data: NewBookingNotific
 منصة WisdomConnect
     `;
 
+    // Trim email and ensure it's valid before sending
+    const trimmedEmail = data.mentorEmail.trim().toLowerCase();
+    
+    if (!trimmedEmail.includes('@') || !trimmedEmail.includes('.')) {
+      console.error(`❌ Invalid mentor email format: ${data.mentorEmail}`);
+      return false;
+    }
+    
     await client.send({
-      to: data.mentorEmail,
+      to: trimmedEmail,
       from: fromEmail,
       subject: `مبروك! حجز جديد - ${data.experienceTitle}`,
       text: textContent,
       html: htmlContent,
+      replyTo: fromEmail,
     });
 
-    console.log(`✅ New booking notification sent to mentor: ${data.mentorEmail}`);
+    console.log(`✅ New booking notification sent to mentor: ${trimmedEmail}`);
     return true;
   } catch (error: any) {
     console.error('Error sending new booking notification:', error);
@@ -273,15 +297,24 @@ export async function sendBookingRejectionEmail(data: BookingRejectionEmailData)
       </html>
     `;
 
+    // Trim email and validate before sending
+    const trimmedEmail = data.recipientEmail.trim().toLowerCase();
+    
+    if (!trimmedEmail.includes('@') || !trimmedEmail.includes('.')) {
+      console.error(`❌ Invalid recipient email format: ${data.recipientEmail}`);
+      return false;
+    }
+    
     await client.send({
-      to: data.recipientEmail,
+      to: trimmedEmail,
       from: fromEmail,
       subject: `إشعار بشأن حجزك - ${data.experienceTitle}`,
       text: `مرحباً ${data.recipientName}،\n\nنأسف لإبلاغك أنه تم رفض حجزك للتجربة "${data.experienceTitle}".\n${data.reason ? `السبب: ${data.reason}` : ''}\n\nمنصة WisdomConnect`,
       html: htmlContent,
+      replyTo: fromEmail,
     });
 
-    console.log(`✅ Rejection email sent to ${data.recipientEmail}`);
+    console.log(`✅ Rejection email sent to ${trimmedEmail}`);
     return true;
   } catch (error: any) {
     console.error('Error sending rejection email:', error);
@@ -355,15 +388,24 @@ ${data.resetLink}
 منصة الخبرات
     `;
 
+    // Trim email and validate before sending
+    const trimmedEmail = data.recipientEmail.trim().toLowerCase();
+    
+    if (!trimmedEmail.includes('@') || !trimmedEmail.includes('.')) {
+      console.error(`❌ Invalid recipient email format: ${data.recipientEmail}`);
+      return false;
+    }
+    
     await client.send({
-      to: data.recipientEmail,
+      to: trimmedEmail,
       from: fromEmail,
       subject: 'إعادة تعيين كلمة المرور - منصة الخبرات',
       text: textContent,
       html: htmlContent,
+      replyTo: fromEmail,
     });
 
-    console.log(`✅ Password reset email sent to ${data.recipientEmail}`);
+    console.log(`✅ Password reset email sent to ${trimmedEmail}`);
     return true;
   } catch (error: any) {
     console.error('Error sending password reset email:', error);
