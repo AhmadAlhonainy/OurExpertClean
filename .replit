@@ -15,6 +15,10 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
+localPort = 32857
+externalPort = 8099
+
+[[ports]]
 localPort = 33131
 externalPort = 6000
 
@@ -93,3 +97,8 @@ waitForPort = 5000
 [agent]
 integrations = ["stripe:1.0.0", "javascript_log_in_with_replit:1.0.0", "javascript_database:1.0.0", "sendgrid:1.0.0", "google-calendar:1.0.0"]
 expertMode = true
+
+[userenv]
+
+[userenv.shared]
+SENDGRID_FROM_EMAIL = "eng.abomoqpel@gmail.com"
