@@ -80,8 +80,20 @@ export default function Messages() {
   // Play notification sound
   const playNotificationSound = useCallback(() => {
     try {
-      // Create a simple beep sound using Web Audio API
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContext) {
+        console.log("Audio not supported");
+        return;
+      }
+      
+      const audioContext = new AudioContext();
+      
+      // Resume audio context if suspended (browser requirement)
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+      
+      // Create a simple beep sound
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       
@@ -93,13 +105,16 @@ export default function Messages() {
       oscillator.type = 'sine';
       
       // Set timing for a short, quiet beep
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime); // Volume: 30%
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      const now = audioContext.currentTime;
+      gainNode.gain.setValueAtTime(0.3, now); // Volume: 30%
+      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
       
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.1);
+      oscillator.start(now);
+      oscillator.stop(now + 0.1);
+      
+      console.log("🔊 Notification sound played");
     } catch (error) {
-      console.log("Audio notification not available");
+      console.log("Audio notification failed:", error);
     }
   }, []);
 

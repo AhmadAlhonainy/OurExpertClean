@@ -28,24 +28,32 @@ const userConnections = new Map<string, Set<WebSocket>>();
 function broadcastToConversation(conversationId: string, message: any) {
   const connections = conversationConnections.get(conversationId);
   if (connections) {
+    console.log(`🔊 Conversation ${conversationId} has ${connections.size} connected clients`);
     const messageStr = JSON.stringify(message);
     connections.forEach(ws => {
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(messageStr);
+        console.log(`✅ Sent message to client in conversation ${conversationId}`);
       }
     });
+  } else {
+    console.log(`⚠️ No connections in conversation ${conversationId}`);
   }
 }
 
 function broadcastToUser(userId: string, message: any) {
   const connections = userConnections.get(userId);
   if (connections) {
+    console.log(`🔊 User ${userId} has ${connections.size} connected clients`);
     const messageStr = JSON.stringify(message);
     connections.forEach(ws => {
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(messageStr);
+        console.log(`✅ Sent message to user ${userId}`);
       }
     });
+  } else {
+    console.log(`⚠️ User ${userId} has no active WebSocket connections`);
   }
 }
 
@@ -2166,6 +2174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Broadcast to WebSocket clients in this conversation
+      console.log(`📨 Broadcasting message to conversation ${conversation.id}`);
       broadcastToConversation(conversation.id, {
         type: 'new_message',
         conversationId: conversation.id,
@@ -2173,8 +2182,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: message,
       });
       
-      // Also notify the other user
+      // Also notify the other user via direct user connection
       const otherUserId = conversation.mentorId === userId ? conversation.learnerId : conversation.mentorId;
+      console.log(`📨 Broadcasting message to user ${otherUserId}`);
       broadcastToUser(otherUserId, {
         type: 'new_message',
         conversationId: conversation.id,
