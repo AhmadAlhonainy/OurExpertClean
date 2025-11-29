@@ -245,7 +245,11 @@ export default function ExperienceDetail() {
                       {(mentor as any)?.bio || "خبير في مجاله"}
                     </p>
                   </div>
-                  <Button variant="outline" data-testid="button-view-mentor">
+                  <Button 
+                    variant="outline" 
+                    data-testid="button-view-mentor"
+                    onClick={() => navigate(`/mentor/${(mentor as any)?.id}`)}
+                  >
                     عرض الملف الشخصي
                   </Button>
                 </div>

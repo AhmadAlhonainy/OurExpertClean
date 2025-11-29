@@ -19,6 +19,7 @@ import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import RoleSelection from "@/pages/RoleSelection";
 import Messages from "@/pages/Messages";
+import MentorProfile from "@/pages/MentorProfile";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -33,10 +34,11 @@ function Router() {
       <Route path="/become-mentor" component={CreateExperience} />
       <Route path="/create-experience" component={CreateExperience} />
       <Route path="/experience/:id" component={ExperienceDetail} />
+      <Route path="/mentor/stripe-connect" component={MentorStripeConnect} />
+      <Route path="/mentor/:id" component={MentorProfile} />
       <Route path="/payment/:id" component={Payment} />
       <Route path="/dashboard/learner" component={LearnerDashboard} />
       <Route path="/dashboard/mentor" component={MentorDashboard} />
-      <Route path="/mentor/stripe-connect" component={MentorStripeConnect} />
       <Route path="/dashboard/admin" component={AdminDashboard} />
       <Route path="/dashboard/manager" component={ManagerDashboard} />
       <Route path="/messages" component={Messages} />
