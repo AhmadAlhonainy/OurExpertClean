@@ -2260,11 +2260,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } else if (message.type === 'join_conversation') {
           // Join a conversation room
           conversationId = message.conversationId;
+          console.log(`👥 User ${userId} joining conversation ${conversationId}`);
           if (conversationId) {
             if (!conversationConnections.has(conversationId)) {
               conversationConnections.set(conversationId, new Set());
             }
             conversationConnections.get(conversationId)!.add(ws);
+            console.log(`✅ User ${userId} joined conversation ${conversationId}. Total: ${conversationConnections.get(conversationId)!.size}`);
             
             ws.send(JSON.stringify({ type: 'joined', conversationId }));
           }

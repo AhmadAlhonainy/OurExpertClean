@@ -123,53 +123,71 @@ export default function Messages() {
     if (!user) return;
 
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const host = window.location.host || window.location.hostname || "localhost:5000";
+    const wsUrl = `${protocol}//${host}/ws`;
+    
+    console.log("🔗 Connecting WebSocket to:", wsUrl);
     
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
     ws.onopen = () => {
+      console.log("✅ WebSocket connected");
       ws.send(JSON.stringify({ type: "auth", userId: user.id }));
     };
 
     ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      
-      if (data.type === "new_message") {
-        // Play notification sound for new messages from others
-        if (data.senderId !== user.id) {
-          playNotificationSound();
-        }
+      try {
+        const data = JSON.parse(event.data);
+        console.log("📨 WebSocket message received:", data.type);
         
-        // Add message to local state immediately for instant display
-        if (selectedConversation && data.conversationId === selectedConversation.id) {
-          setLocalMessages(prev => {
-            // Avoid duplicate messages
-            if (prev.some(m => m.id === data.message.id)) {
-              return prev;
-            }
-            return [...prev, data.message];
-          });
+        if (data.type === "new_message") {
+          console.log("💬 New message from user:", data.senderId);
+          
+          // Play notification sound for new messages from others
+          if (data.senderId !== user.id) {
+            console.log("🔊 Playing notification sound...");
+            playNotificationSound();
+          }
+          
+          // Add message to local state immediately for instant display
+          if (selectedConversation && data.conversationId === selectedConversation.id) {
+            setLocalMessages(prev => {
+              // Avoid duplicate messages
+              if (prev.some(m => m.id === data.message.id)) {
+                return prev;
+              }
+              return [...prev, data.message];
+            });
+          }
+          
+          // Refresh conversations list and current conversation
+          queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
+          if (selectedConversation && data.conversationId === selectedConversation.id) {
+            refetchConversation();
+          }
+        } else if (data.type === "typing") {
+          if (data.userId !== user.id) {
+            setOtherUserTyping(data.isTyping);
+          }
         }
-        
-        // Refresh conversations list and current conversation
-        queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
-        if (selectedConversation && data.conversationId === selectedConversation.id) {
-          refetchConversation();
-        }
-      } else if (data.type === "typing") {
-        if (data.userId !== user.id) {
-          setOtherUserTyping(data.isTyping);
-        }
+      } catch (err) {
+        console.error("Error processing WebSocket message:", err);
       }
     };
 
     ws.onerror = (error) => {
-      console.error("WebSocket error:", error);
+      console.error("❌ WebSocket error:", error);
+    };
+
+    ws.onclose = () => {
+      console.log("🔌 WebSocket disconnected");
     };
 
     return () => {
-      ws.close();
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
     };
   }, [user, selectedConversation, playNotificationSound]);
 
