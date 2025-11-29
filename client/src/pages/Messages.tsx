@@ -47,6 +47,7 @@ export default function Messages() {
   const [newMessage, setNewMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [otherUserTyping, setOtherUserTyping] = useState(false);
+  const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const typingTimeoutRef = useRef<number | null>(null);
@@ -125,7 +126,18 @@ export default function Messages() {
           playNotificationSound();
         }
         
-        // Refresh conversations and current conversation immediately
+        // Add message to local state immediately for instant display
+        if (selectedConversation && data.conversationId === selectedConversation.id) {
+          setLocalMessages(prev => {
+            // Avoid duplicate messages
+            if (prev.some(m => m.id === data.message.id)) {
+              return prev;
+            }
+            return [...prev, data.message];
+          });
+        }
+        
+        // Refresh conversations list and current conversation
         queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
         if (selectedConversation && data.conversationId === selectedConversation.id) {
           refetchConversation();
@@ -146,8 +158,11 @@ export default function Messages() {
     };
   }, [user, selectedConversation, playNotificationSound]);
 
-  // Join/leave conversation rooms
+  // Join/leave conversation rooms and reset local messages
   useEffect(() => {
+    // Reset local messages when switching conversations
+    setLocalMessages([]);
+    
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
     
     if (selectedConversation) {
@@ -349,7 +364,7 @@ export default function Messages() {
                 <CardContent className="flex-1 p-0 overflow-hidden">
                   <ScrollArea className="h-[calc(100vh-420px)] p-4">
                     <div className="space-y-4">
-                      {conversationDetails.messages?.map((msg) => (
+                      {(localMessages.length > 0 ? localMessages : conversationDetails.messages)?.map((msg) => (
                         <div
                           key={msg.id}
                           className={`flex ${msg.senderId === user.id ? "justify-start" : "justify-end"}`}
