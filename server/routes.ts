@@ -2030,7 +2030,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "التجربة غير موجودة" });
       }
 
-      // Delete the experience
+      // Check if there are any bookings for this experience by getting all bookings
+      const allBookings = await storage.getAllBookings();
+      const hasBookings = allBookings.some(b => b.experienceId === experienceId);
+      
+      if (hasBookings) {
+        return res.status(400).json({ 
+          message: "لا يمكن حذف التجربة لأنها لديها حجوزات. استخدم الإخفاء بدلاً من ذلك.",
+          hasBookings: true 
+        });
+      }
+
+      // Delete the experience only if no bookings
       await storage.deleteExperience(experienceId);
       
       res.json({ success: true, message: "تم حذف التجربة بنجاح" });

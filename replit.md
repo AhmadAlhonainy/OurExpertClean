@@ -100,11 +100,12 @@ Preferred communication style: Simple, everyday language.
 ## Recent Enhancements (Nov 30, 2025)
 
 ### Admin Experience Management
-- Added admin control to delete experiences: `DELETE /api/admin/experiences/:id`
-- Added admin control to hide/unhide experiences: `PATCH /api/admin/experiences/:id/hide`
+- Added admin control to delete experiences: `DELETE /api/admin/experiences/:id` (only for experiences with NO bookings)
+- Added admin control to hide/unhide experiences: `PATCH /api/admin/experiences/:id/hide` (works for all experiences)
 - Added `isHidden` field to Experience schema (boolean, default: false)
 - New buttons in ManagerDashboard experiences table: "إخفاء" (Hide), "إظهار" (Unhide), "حذف" (Delete)
 - Dialog actions for experience management: hide/unhide and delete operations with instant UI feedback
+- Delete validation: Returns helpful error message if experience has associated bookings, directs admin to use hide instead
 
 ### Mentor Profile & Booking Management
 - Created public mentor profile page (`/mentor/:id`) showing all experiences and reviews
