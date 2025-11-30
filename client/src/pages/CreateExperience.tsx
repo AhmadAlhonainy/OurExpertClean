@@ -83,7 +83,7 @@ export default function CreateExperience() {
     price: "",
     description: "",
     learningPoints: [""],
-    city: "",
+    cities: [] as string[],
   });
 
   const [availableDates, setAvailableDates] = useState<{date: Date, period: 'morning' | 'evening'}[]>([]);
@@ -159,6 +159,11 @@ export default function CreateExperience() {
         await new Promise(resolve => setTimeout(resolve, 500));
       }
       
+      // Validate at least one city is selected
+      if (!data.cities || data.cities.length === 0) {
+        throw new Error('يجب اختيار مدينة واحدة على الأقل');
+      }
+
       // Create the experience
       const response = await apiRequest('POST', '/api/experiences', {
         title: data.title,
@@ -166,7 +171,7 @@ export default function CreateExperience() {
         price: parseFloat(data.price),
         description: data.description,
         learningPoints: data.learningPoints.filter(p => p.trim() !== ''),
-        city: data.city,
+        cities: data.cities,
       });
       
       const experience = await response.json();
@@ -502,30 +507,56 @@ export default function CreateExperience() {
               <CardHeader>
                 <CardTitle>الموقع</CardTitle>
                 <CardDescription>
-                  اختر المدينة التي ستقام فيها التجربة
+                  اختر المدن التي ستقام فيها التجربة
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="city">المدينة *</Label>
-                  <Select
-                    value={formData.city}
-                    onValueChange={(value) => {
-                      setFormData({ ...formData, city: value });
-                    }}
-                    required
-                  >
-                    <SelectTrigger id="city" data-testid="select-city">
-                      <SelectValue placeholder="اختر مدينتك" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cities.map((city) => (
-                        <SelectItem key={city} value={city}>
+                <div className="space-y-3">
+                  <Label>المدن *</Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {cities.map((city) => (
+                      <div key={city} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={`city-${city}`}
+                          checked={formData.cities.includes(city)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormData({
+                                ...formData,
+                                cities: [...formData.cities, city]
+                              });
+                            } else {
+                              setFormData({
+                                ...formData,
+                                cities: formData.cities.filter(c => c !== city)
+                              });
+                            }
+                          }}
+                          data-testid={`checkbox-city-${city}`}
+                          className="rounded border-gray-300"
+                        />
+                        <Label htmlFor={`city-${city}`} className="font-normal cursor-pointer">
                           {city}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                  {formData.cities.length === 0 && (
+                    <p className="text-sm text-destructive">يجب اختيار مدينة واحدة على الأقل</p>
+                  )}
+                  {formData.cities.length > 0 && (
+                    <div className="mt-4 p-3 bg-primary/10 rounded-md">
+                      <p className="text-sm font-medium mb-2">المدن المختارة:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {formData.cities.map((city) => (
+                          <span key={city} className="px-3 py-1 bg-primary text-primary-foreground rounded-md text-sm">
+                            {city}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

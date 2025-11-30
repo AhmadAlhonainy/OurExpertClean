@@ -146,7 +146,7 @@ export default function ExpertSearch() {
                             </CardTitle>
                             <CardDescription className="flex items-center gap-2">
                               <MapPin className="w-3 h-3" />
-                              {experience.city}
+                              {experience.cities?.join(", ") || "—"}
                             </CardDescription>
                           </div>
                         </div>

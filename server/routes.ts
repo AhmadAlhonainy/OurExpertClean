@@ -347,7 +347,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const filters: any = {};
       
       if (category) filters.category = category as string;
-      if (city) filters.city = city as string;
+      if (city) filters.cities = city as string;
       if (mentorId) filters.mentorId = mentorId as string;
       if (search) filters.search = search as string;
       

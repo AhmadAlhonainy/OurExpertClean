@@ -229,7 +229,7 @@ export default function MentorDashboard() {
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <MapPin className="w-4 h-4" />
-                <span>{experience.city}</span>
+                <span>{experience.cities?.join(", ") || "—"}</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <DollarSign className="w-4 h-4" />

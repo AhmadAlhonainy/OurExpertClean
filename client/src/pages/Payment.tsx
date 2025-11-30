@@ -479,7 +479,7 @@ export default function Payment() {
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">الموقع:</span>
                           <span className="font-medium" data-testid="text-booking-location">
-                            {experience.city}
+                            {experience.cities?.join(", ") || "—"}
                           </span>
                         </div>
                       </div>

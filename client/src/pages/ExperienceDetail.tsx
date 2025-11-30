@@ -216,7 +216,7 @@ export default function ExperienceDetail() {
                   </div>
                   <div className="flex items-center gap-1">
                     <MapPin className="h-4 w-4" />
-                    <span data-testid="text-location">{experience.city}</span>
+                    <span data-testid="text-location">{experience.cities?.join(", ") || "—"}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Coffee className="h-4 w-4" />

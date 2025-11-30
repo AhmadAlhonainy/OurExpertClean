@@ -543,7 +543,7 @@ export default function ManagerDashboard() {
                           <TableCell className="font-medium">{experience.title}</TableCell>
                           <TableCell>{experience.category}</TableCell>
                           <TableCell>{experience.price} ريال</TableCell>
-                          <TableCell>{experience.city}</TableCell>
+                          <TableCell>{experience.cities?.join(", ") || "—"}</TableCell>
                           <TableCell>
                             <Badge variant={
                               experience.approvalStatus === 'approved' ? 'default' :

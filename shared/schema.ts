@@ -46,7 +46,7 @@ export const experiences = pgTable("experiences", {
   description: text("description").notNull(),
   category: text("category").notNull(),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
-  city: text("city").notNull(),
+  cities: text("cities").array().notNull(),
   learningPoints: text("learning_points").array().notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   isHidden: boolean("is_hidden").default(false).notNull(),
