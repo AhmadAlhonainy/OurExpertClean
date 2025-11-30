@@ -11,7 +11,6 @@ import Payment from "@/pages/Payment";
 import LearnerDashboard from "@/pages/LearnerDashboard";
 import MentorDashboard from "@/pages/MentorDashboard";
 import MentorStripeConnect from "@/pages/MentorStripeConnect";
-import AdminDashboard from "@/pages/AdminDashboard";
 import ManagerDashboard from "@/pages/ManagerDashboard";
 import BookExperience from "@/pages/BookExperience";
 import SignIn from "@/pages/SignIn";
@@ -39,7 +38,6 @@ function Router() {
       <Route path="/payment/:id" component={Payment} />
       <Route path="/dashboard/learner" component={LearnerDashboard} />
       <Route path="/dashboard/mentor" component={MentorDashboard} />
-      <Route path="/dashboard/admin" component={AdminDashboard} />
       <Route path="/dashboard/manager" component={ManagerDashboard} />
       <Route path="/messages" component={Messages} />
       <Route component={NotFound} />

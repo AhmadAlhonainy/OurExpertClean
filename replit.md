@@ -101,9 +101,11 @@ Preferred communication style: Simple, everyday language.
 ### Mentor Profile & Booking Management
 - Created public mentor profile page (`/mentor/:id`) showing all experiences and reviews
 - Added button "عرض الملف الشخصي" (View Profile) on experience detail pages
-- Implemented admin booking control: cancel and suspend bookings from management dashboard
+- Implemented admin booking control: cancel and suspend bookings from ManagerDashboard
 - New booking status: `under_review` for suspended bookings
 - Admin can now manage bookings from ManagerDashboard with instant feedback via toast notifications
+- Consolidated dashboards: Removed duplicate AdminDashboard, using ManagerDashboard for all admin functions
+- Toggle buttons: "تعليق" becomes "فك التعليق" when booking status is under_review
 
 ### Previous Enhancements (Nov 28, 2025)
 
