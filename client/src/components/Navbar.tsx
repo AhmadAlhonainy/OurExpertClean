@@ -124,11 +124,6 @@ export default function Navbar() {
                           لوحة التحكم
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="text-right cursor-pointer" asChild>
-                        <Link href="/dashboard/admin" data-testid="link-admin-dashboard">
-                          لوحة الإدارة
-                        </Link>
-                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                     </>
                   )}
@@ -252,13 +247,6 @@ export default function Navbar() {
                   <Button variant="ghost" className="w-full justify-start" asChild>
                     <Link href="/dashboard/mentor">
                       لوحة المرشد
-                    </Link>
-                  </Button>
-                )}
-                {user?.role === 'admin' && (
-                  <Button variant="ghost" className="w-full justify-start" asChild>
-                    <Link href="/dashboard/admin">
-                      لوحة الإدارة
                     </Link>
                   </Button>
                 )}
