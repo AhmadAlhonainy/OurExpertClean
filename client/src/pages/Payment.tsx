@@ -182,6 +182,7 @@ export default function Payment() {
   const [paymentIntentId, setPaymentIntentId] = useState<string>("");
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [stripeError, setStripeError] = useState(false);
+  const [paymentIntentError, setPaymentIntentError] = useState<string | null>(null);
   const [isPayingLater, setIsPayingLater] = useState(false);
 
   const { data: booking, isLoading } = useQuery<Booking>({
@@ -245,6 +246,7 @@ export default function Payment() {
       setPaymentIntentId(data.paymentIntentId);
     },
     onError: (error: any) => {
+      setPaymentIntentError(error.message);
       toast({
         title: "خطأ في إنشاء الدفع",
         description: error.message,
@@ -254,10 +256,10 @@ export default function Payment() {
   });
 
   useEffect(() => {
-    if (bookingId && !clientSecret && stripePromise) {
+    if (bookingId && !clientSecret && stripePromise && !paymentIntentError) {
       createPaymentIntent.mutate();
     }
-  }, [bookingId, stripePromise]);
+  }, [bookingId, stripePromise, paymentIntentError]);
 
   const handlePaymentSuccess = () => {
     setPaymentSuccess(true);
@@ -390,13 +392,15 @@ export default function Payment() {
                         totalAmount={booking.totalAmount}
                       />
                     </Elements>
-                  ) : stripeError ? (
+                  ) : stripeError || paymentIntentError ? (
                     <div className="py-8">
                       <div className="text-center mb-6">
                         <AlertCircle className="h-12 w-12 text-orange-500 mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">نظام الدفع غير متاح حالياً</h3>
+                        <h3 className="text-lg font-semibold mb-2">
+                          {paymentIntentError ? "خطأ في إنشاء طلب الدفع" : "نظام الدفع غير متاح حالياً"}
+                        </h3>
                         <p className="text-muted-foreground text-sm">
-                          نظام الدفع قيد التهيئة. يمكنك حفظ الحجز والدفع لاحقاً.
+                          {paymentIntentError || "نظام الدفع قيد التهيئة. يمكنك حفظ الحجز والدفع لاحقاً."}
                         </p>
                       </div>
                     </div>
