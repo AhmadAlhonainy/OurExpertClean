@@ -33,9 +33,17 @@ Preferred communication style: Simple, everyday language.
 
 ### Payment Processing
 
--   **Integration:** Stripe Connect for marketplace payments.
--   **Flow:** Payment intents with escrow, funds held until 24 hours post-session or review submission. Payment release/refund determined by reviews (≥3 stars for release, <3 for refund). Automated release after 24 hours if no review.
+-   **Integration:** Stripe Connect for marketplace payments via Replit connector.
+-   **Currency:** All transactions in SAR (Saudi Riyal).
+-   **Webhook:** UUID-based routing at `/api/stripe/webhook/:uuid` for security.
+-   **Flow:** Payment intents with escrow (manual capture), funds held until 24 hours post-session or review submission.
+-   **Security Model:**
+    -   Release: Learner (own booking) or admin can trigger if (rating ≥ 3) OR (deadline passed)
+    -   Refund: Admin-only for low reviews (<3 stars) or disputed bookings
+    -   Protection: Bookings under review blocked from auto-release
+    -   Audit: All payment operations logged with actor, reason, and timestamp
 -   **Commission:** Platform fees deducted (e.g., 20%) before mentor payout.
+-   **Important Files:** `server/stripeClient.ts`, `server/paymentProcessor.ts`, `server/webhookHandlers.ts`
 
 ### Authentication & Authorization
 
