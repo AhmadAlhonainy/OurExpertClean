@@ -197,6 +197,21 @@ export default function ManagerDashboard() {
     },
   });
 
+  // Unsuspend Booking Mutation
+  const unsuspendBookingMutation = useMutation({
+    mutationFn: async (bookingId: string) => {
+      const response = await apiRequest('POST', `/api/admin/bookings/${bookingId}/unsuspend`, {});
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/bookings"] });
+      toast({ title: "تم فك تعليق الحجز" });
+    },
+    onError: () => {
+      toast({ title: "فشل فك تعليق الحجز", variant: "destructive" });
+    },
+  });
+
   if (userLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -374,7 +389,17 @@ export default function ManagerDashboard() {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
-                              {(booking.status === 'pending' || booking.status === 'confirmed') && (
+                              {booking.status === 'under_review' ? (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => unsuspendBookingMutation.mutate(booking.id)}
+                                  disabled={unsuspendBookingMutation.isPending}
+                                  data-testid={`button-unsuspend-${booking.id}`}
+                                >
+                                  فك التعليق
+                                </Button>
+                              ) : (booking.status === 'pending' || booking.status === 'confirmed') ? (
                                 <>
                                   <Button
                                     size="sm"
@@ -395,7 +420,7 @@ export default function ManagerDashboard() {
                                     إلغاء
                                   </Button>
                                 </>
-                              )}
+                              ) : null}
                             </div>
                           </TableCell>
                         </TableRow>

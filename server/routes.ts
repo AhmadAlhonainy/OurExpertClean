@@ -1779,6 +1779,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POST /api/admin/bookings/:id/unsuspend - Admin removes suspension from a booking
+  app.post('/api/admin/bookings/:id/unsuspend', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const bookingId = req.params.id;
+      const booking = await storage.getBooking(bookingId);
+      
+      if (!booking) {
+        return res.status(404).json({ message: "الحجز غير موجود" });
+      }
+
+      if (booking.status !== 'under_review') {
+        return res.status(400).json({ message: "الحجز ليس قيد المراجعة" });
+      }
+
+      // Update booking status back to confirmed
+      await storage.updateBooking(bookingId, { 
+        status: 'confirmed'
+      });
+
+      res.json({ success: true, message: "تم فك تعليق الحجز" });
+    } catch (error) {
+      console.error("Error unsuspending booking:", error);
+      res.status(500).json({ message: "فشل في فك تعليق الحجز" });
+    }
+  });
+
   // ==================== USER PROFILE ROUTES ====================
 
   // GET /api/users/:id - Get user profile
