@@ -1,0 +1,43 @@
+~/workspace$ git add .replit
+git commit -m "Remove API key from .replit - use secure environment variables instead"
+git push -u origin main
+On branch main
+Your branch is ahead of 'origin/main' by 7 commits.
+  (use "git push" to publish your local commits)
+
+nothing to commit, working tree clean
+Enumerating objects: 30, done.
+Counting objects: 100% (30/30), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (25/25), done.
+Writing objects: 100% (25/25), 353.45 KiB | 27.19 MiB/s, done.
+Total 25 (delta 21), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (21/21), completed with 5 local objects.
+remote: error: GH013: Repository rule violations found for refs/heads/main.
+remote: 
+remote: - GITHUB PUSH PROTECTION
+remote:   —————————————————————————————————————————
+remote:     Resolve the following violations before pushing again
+remote: 
+remote:     - Push cannot contain secrets
+remote: 
+remote:     
+remote:      (?) Learn how to resolve a blocked push
+remote:      https://docs.github.com/code-security/secret-scanning/working-with-secret-scanning-and-push-protection/working-with-push-protection-from-the-command-line#resolving-a-blocked-push
+remote:     
+remote:     
+remote:       —— SendGrid API Key ——————————————————————————————————
+remote:        locations:
+remote:          - commit: df41ce23a031373ce4145e68f97d945396ce3756
+remote:            path: .replit:101
+remote:          - commit: 652b731ccb19a87229f5774dec3ca9d4c8a8aa99
+remote:            path: .replit:105
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/AhmadAlhonainy/OurExpertClean/security/secret-scanning/unblock-secret/36CqSNG1huTD7bwBPJ9o2v0Cbya
+remote:     
+remote: 
+remote: 
+To https://github.com/AhmadAlhonainy/OurExpertClean.git
+ ! [remote rejected] main -> main (push declined due to repository rule violations)
+error: failed to push some refs to 'https://github.com/AhmadAlhonainy/OurExpertClean.git'
