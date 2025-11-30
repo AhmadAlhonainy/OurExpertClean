@@ -579,7 +579,7 @@ export default function CreateExperience() {
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     className="text-right"
                     required
-                    min="50"
+                    min="1"
                     data-testid="input-price"
                   />
                   <p className="text-sm text-muted-foreground">
