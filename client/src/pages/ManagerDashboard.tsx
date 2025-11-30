@@ -167,6 +167,36 @@ export default function ManagerDashboard() {
     },
   });
 
+  // Cancel Booking Mutation
+  const cancelBookingMutation = useMutation({
+    mutationFn: async (bookingId: string) => {
+      const response = await apiRequest('POST', `/api/admin/bookings/${bookingId}/cancel`, {});
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/bookings"] });
+      toast({ title: "تم إلغاء الحجز بنجاح" });
+    },
+    onError: () => {
+      toast({ title: "فشل إلغاء الحجز", variant: "destructive" });
+    },
+  });
+
+  // Suspend Booking Mutation
+  const suspendBookingMutation = useMutation({
+    mutationFn: async (bookingId: string) => {
+      const response = await apiRequest('POST', `/api/admin/bookings/${bookingId}/suspend`, {});
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/bookings"] });
+      toast({ title: "تم تعليق الحجز قيد المراجعة" });
+    },
+    onError: () => {
+      toast({ title: "فشل تعليق الحجز", variant: "destructive" });
+    },
+  });
+
   if (userLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -306,6 +336,7 @@ export default function ManagerDashboard() {
                         <TableHead className="text-right">المبلغ</TableHead>
                         <TableHead className="text-right">حالة الحجز</TableHead>
                         <TableHead className="text-right">حالة الدفع</TableHead>
+                        <TableHead className="text-right">الإجراءات</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -320,11 +351,13 @@ export default function ManagerDashboard() {
                             <Badge variant={
                               booking.status === 'completed' ? 'default' :
                               booking.status === 'confirmed' ? 'secondary' :
-                              booking.status === 'pending' ? 'outline' : 'destructive'
+                              booking.status === 'pending' ? 'outline' :
+                              booking.status === 'under_review' ? 'secondary' : 'destructive'
                             }>
                               {booking.status === 'pending' ? 'قيد الانتظار' :
                                booking.status === 'confirmed' ? 'مؤكد' :
                                booking.status === 'completed' ? 'مكتمل' :
+                               booking.status === 'under_review' ? 'قيد المراجعة' :
                                booking.status === 'cancelled' ? 'ملغي' : 'مسترد'}
                             </Badge>
                           </TableCell>
@@ -338,6 +371,32 @@ export default function ManagerDashboard() {
                                booking.paymentStatus === 'held' ? 'محجوز' :
                                booking.paymentStatus === 'released' ? 'محول' : 'مسترد'}
                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              {(booking.status === 'pending' || booking.status === 'confirmed') && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => suspendBookingMutation.mutate(booking.id)}
+                                    disabled={suspendBookingMutation.isPending}
+                                    data-testid={`button-suspend-${booking.id}`}
+                                  >
+                                    تعليق
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => cancelBookingMutation.mutate(booking.id)}
+                                    disabled={cancelBookingMutation.isPending}
+                                    data-testid={`button-cancel-${booking.id}`}
+                                  >
+                                    إلغاء
+                                  </Button>
+                                </>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}

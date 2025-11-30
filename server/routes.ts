@@ -1729,6 +1729,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POST /api/admin/bookings/:id/cancel - Admin cancels a booking
+  app.post('/api/admin/bookings/:id/cancel', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const bookingId = req.params.id;
+      const booking = await storage.getBooking(bookingId);
+      
+      if (!booking) {
+        return res.status(404).json({ message: "الحجز غير موجود" });
+      }
+
+      // Can only cancel pending or confirmed bookings
+      if (!['pending', 'confirmed'].includes(booking.status)) {
+        return res.status(400).json({ message: "لا يمكن إلغاء هذا الحجز - الحالة غير مناسبة" });
+      }
+
+      // Update booking status
+      await storage.updateBooking(bookingId, { 
+        status: 'cancelled',
+        paymentStatus: 'refunded'
+      });
+
+      res.json({ success: true, message: "تم إلغاء الحجز بنجاح" });
+    } catch (error) {
+      console.error("Error cancelling booking:", error);
+      res.status(500).json({ message: "فشل في إلغاء الحجز" });
+    }
+  });
+
+  // POST /api/admin/bookings/:id/suspend - Admin suspends a booking (under review)
+  app.post('/api/admin/bookings/:id/suspend', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const bookingId = req.params.id;
+      const booking = await storage.getBooking(bookingId);
+      
+      if (!booking) {
+        return res.status(404).json({ message: "الحجز غير موجود" });
+      }
+
+      // Update booking status to under_review
+      await storage.updateBooking(bookingId, { 
+        status: 'under_review'
+      });
+
+      res.json({ success: true, message: "تم تعليق الحجز قيد المراجعة" });
+    } catch (error) {
+      console.error("Error suspending booking:", error);
+      res.status(500).json({ message: "فشل في تعليق الحجز" });
+    }
+  });
+
   // ==================== USER PROFILE ROUTES ====================
 
   // GET /api/users/:id - Get user profile

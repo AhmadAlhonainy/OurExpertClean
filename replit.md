@@ -15,6 +15,7 @@ Preferred communication style: Simple, everyday language.
 -   **Frameworks:** React 18 with TypeScript, Vite, Wouter for routing, TanStack Query for server state.
 -   **UI:** Shadcn/ui (New York style), Radix UI primitives, Tailwind CSS, RTL support for Arabic, Inter and Sora fonts, intelligent search interface.
 -   **State Management:** React Query for server state; local React state for UI.
+-   **New Pages:** MentorProfile.tsx (view mentor profile, experiences, reviews)
 
 ### Backend
 
@@ -22,7 +23,7 @@ Preferred communication style: Simple, everyday language.
 -   **Authentication:** Session-based using Replit Auth (OpenID Connect) and Email/Password. PostgreSQL for session storage.
 -   **API:** RESTful endpoints (`/api/*`), JSON communication, Zod validation, authenticated routes with `isAuthenticated` middleware.
     -   **Key Endpoints:** `/api/experiences` (intelligent search), `/api/bookings`, `/api/availability`, `/api/reviews`, `/api/payments`, `/api/auth/user`.
-    -   **Admin Endpoints:** `/api/admin/bookings`, `/api/admin/users`, `/api/admin/experiences`, `/api/admin/complaints`, `/api/admin/revenue`.
+    -   **Admin Endpoints:** `/api/admin/bookings`, `/api/admin/users`, `/api/admin/experiences`, `/api/admin/complaints`, `/api/admin/revenue`, `/api/admin/bookings/:id/cancel`, `/api/admin/bookings/:id/suspend`.
 
 ### Database
 
@@ -50,6 +51,8 @@ Preferred communication style: Simple, everyday language.
 -   **Availability Management System:** Secure creation and management of mentor availability slots with authorization checks and prevention of duplicate entries.
 -   **Real-time Messaging:** WebSocket-based instant messaging between mentors and learners with typing indicators and message notifications.
 -   **Password Reset:** Secure password reset via email with 1-hour expiring tokens, full Arabic RTL support.
+-   **Mentor Profiles:** Public profiles showing all mentor experiences and reviews (accessible via `/mentor/:id`).
+-   **Admin Booking Management:** Admins can cancel or suspend bookings from the management dashboard.
 
 ### Email Configuration (SendGrid)
 
@@ -93,21 +96,30 @@ Preferred communication style: Simple, everyday language.
 
 -   **Google Fonts:** Inter (UI/body), Sora (display/headings).
 
-## Recent Enhancements (Nov 28, 2025)
+## Recent Enhancements (Nov 30, 2025)
 
-### Email System Fixes
+### Mentor Profile & Booking Management
+- Created public mentor profile page (`/mentor/:id`) showing all experiences and reviews
+- Added button "عرض الملف الشخصي" (View Profile) on experience detail pages
+- Implemented admin booking control: cancel and suspend bookings from management dashboard
+- New booking status: `under_review` for suspended bookings
+- Admin can now manage bookings from ManagerDashboard with instant feedback via toast notifications
+
+### Previous Enhancements (Nov 28, 2025)
+
+#### Email System Fixes
 - Fixed SendGrid configuration: removed incorrect `SENDGRID_FROM_EMAIL` secret that contained API key
 - Added email validation and sanitization in all email functions
 - Enhanced error logging for SendGrid failures
 - Password reset emails now have proper validation before sending
 
-### Real-time Messaging
+#### Real-time Messaging
 - Implemented WebSocket for instant message delivery (no page refresh needed)
 - Added notification sound for incoming messages (quiet, 100ms beep at 800Hz, 30% volume)
 - Fixed WebSocket message broadcasting to include `senderId` for proper sound triggering
 - Message updates now happen immediately across all connected clients
 
-### Admin Access
+#### Admin Access
 - Added `eng.abomoqpel@gmail.com` to admin users with full platform access
 
 ## Development Notes
@@ -124,3 +136,9 @@ Preferred communication style: Simple, everyday language.
 - Typing indicators broadcast to conversation room
 - New messages broadcast to sender and recipient with user ID for audio notification
 - Auto-reconnection handled at client level
+
+**Admin Booking Management:**
+- Cancel: Marks booking as `cancelled` with `refunded` payment status (pending/confirmed only)
+- Suspend: Marks booking as `under_review` for investigation
+- Only available for pending or confirmed bookings
+- Immediate UI updates with success/error notifications
