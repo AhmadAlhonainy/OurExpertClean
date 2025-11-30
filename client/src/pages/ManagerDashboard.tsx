@@ -173,12 +173,13 @@ export default function ManagerDashboard() {
       const response = await apiRequest('POST', `/api/admin/bookings/${bookingId}/cancel`, {});
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/bookings"] });
-      toast({ title: "تم إلغاء الحجز بنجاح" });
+      toast({ title: data.message || "تم إلغاء الحجز بنجاح" });
     },
-    onError: () => {
-      toast({ title: "فشل إلغاء الحجز", variant: "destructive" });
+    onError: (error: any) => {
+      const errorMsg = error?.message || "فشل إلغاء الحجز";
+      toast({ title: errorMsg, variant: "destructive" });
     },
   });
 
@@ -188,12 +189,13 @@ export default function ManagerDashboard() {
       const response = await apiRequest('POST', `/api/admin/bookings/${bookingId}/suspend`, {});
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/bookings"] });
-      toast({ title: "تم تعليق الحجز قيد المراجعة" });
+      toast({ title: data.message || "تم تعليق الحجز قيد المراجعة" });
     },
-    onError: () => {
-      toast({ title: "فشل تعليق الحجز", variant: "destructive" });
+    onError: (error: any) => {
+      const errorMsg = error?.message || "فشل تعليق الحجز";
+      toast({ title: errorMsg, variant: "destructive" });
     },
   });
 
@@ -203,12 +205,13 @@ export default function ManagerDashboard() {
       const response = await apiRequest('POST', `/api/admin/bookings/${bookingId}/unsuspend`, {});
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/bookings"] });
-      toast({ title: "تم فك تعليق الحجز" });
+      toast({ title: data.message || "تم فك تعليق الحجز" });
     },
-    onError: () => {
-      toast({ title: "فشل فك تعليق الحجز", variant: "destructive" });
+    onError: (error: any) => {
+      const errorMsg = error?.message || "فشل فك تعليق الحجز";
+      toast({ title: errorMsg, variant: "destructive" });
     },
   });
 
@@ -218,13 +221,14 @@ export default function ManagerDashboard() {
       const response = await apiRequest('DELETE', `/api/admin/experiences/${experienceId}`, {});
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/experiences"] });
       setSelectedExperience(null);
-      toast({ title: "تم حذف التجربة بنجاح" });
+      toast({ title: data.message || "تم حذف التجربة بنجاح" });
     },
-    onError: () => {
-      toast({ title: "فشل حذف التجربة", variant: "destructive" });
+    onError: (error: any) => {
+      const errorMsg = error?.message || "فشل حذف التجربة";
+      toast({ title: errorMsg, variant: "destructive" });
     },
   });
 
