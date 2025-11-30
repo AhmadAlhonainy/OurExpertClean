@@ -2020,7 +2020,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // DELETE /api/admin/experiences/:id - Delete experience
+  // DELETE /api/admin/experiences/:id - Delete experience with all related data
   app.delete('/api/admin/experiences/:id', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const experienceId = req.params.id;
@@ -2030,21 +2030,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "التجربة غير موجودة" });
       }
 
-      // Check if there are any bookings for this experience by getting all bookings
+      // Get all related bookings
       const allBookings = await storage.getAllBookings();
-      const hasBookings = allBookings.some(b => b.experienceId === experienceId);
-      
-      if (hasBookings) {
-        return res.status(400).json({ 
-          message: "لا يمكن حذف التجربة لأنها لديها حجوزات. استخدم الإخفاء بدلاً من ذلك.",
-          hasBookings: true 
-        });
+      const relatedBookings = allBookings.filter(b => b.experienceId === experienceId);
+
+      // Delete all related data in order (cascade delete)
+      // This is safe because we're an admin performing a deliberate action
+      for (const booking of relatedBookings) {
+        // Delete conversations 
+        const conversation = await storage.getConversationByBookingId(booking.id);
+        if (conversation) {
+          await storage.updateConversation(conversation.id, { isActive: false });
+        }
+        
+        // Release availability if booked
+        if (booking.availabilityId) {
+          await storage.releaseAvailability(booking.availabilityId, booking.id);
+        }
+
+        // Delete the booking itself
+        await storage.deleteBooking(booking.id);
       }
 
-      // Delete the experience only if no bookings
+      // Delete all availability slots for this experience
+      const availabilitySlots = await storage.getAvailability(experienceId);
+      for (const slot of availabilitySlots) {
+        await storage.deleteAvailability(slot.id);
+      }
+
+      // Delete the experience itself
       await storage.deleteExperience(experienceId);
       
-      res.json({ success: true, message: "تم حذف التجربة بنجاح" });
+      res.json({ success: true, message: "تم حذف التجربة وجميع البيانات المرتبطة بها بنجاح" });
     } catch (error) {
       console.error("Error deleting experience:", error);
       res.status(500).json({ message: "فشل في حذف التجربة" });

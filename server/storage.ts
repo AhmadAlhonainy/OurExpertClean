@@ -65,6 +65,7 @@ export interface IStorage {
   getBookingsByMentor(mentorId: string): Promise<Booking[]>;
   createBooking(booking: InsertBooking): Promise<Booking>;
   updateBooking(id: string, booking: Partial<InsertBooking>): Promise<Booking | undefined>;
+  deleteBooking(id: string): Promise<boolean>;
 
   // Reviews
   getReview(bookingId: string): Promise<Review | undefined>;
@@ -439,6 +440,10 @@ export class MemStorage implements IStorage {
     const updated = { ...booking, ...updates, updatedAt: new Date() };
     this.bookings.set(id, updated);
     return updated;
+  }
+
+  async deleteBooking(id: string): Promise<boolean> {
+    return this.bookings.delete(id);
   }
 
   // Reviews
@@ -1011,6 +1016,11 @@ export class DbStorage implements IStorage {
       .where(eq(bookings.id, id))
       .returning();
     return result[0];
+  }
+
+  async deleteBooking(id: string): Promise<boolean> {
+    const result = await this.database.delete(bookings).where(eq(bookings.id, id)).returning();
+    return result.length > 0;
   }
 
   async getReview(bookingId: string): Promise<Review | undefined> {
