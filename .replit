@@ -63,6 +63,10 @@ localPort = 45123
 externalPort = 5173
 
 [[ports]]
+localPort = 46055
+externalPort = 8099
+
+[[ports]]
 localPort = 46715
 externalPort = 8081
 
@@ -98,3 +102,4 @@ expertMode = true
 
 [userenv.shared]
 SENDGRID_FROM_EMAIL = "al.wafi.151@gmail.com"
+SENDGRID_API_KEY = "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"
