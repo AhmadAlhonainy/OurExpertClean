@@ -299,6 +299,7 @@ export class MemStorage implements IStorage {
       ...insertExperience,
       id,
       isActive: insertExperience.isActive ?? true,
+      isHidden: insertExperience.isHidden ?? false,
       approvalStatus: insertExperience.approvalStatus ?? "pending",
       createdAt: new Date(),
       updatedAt: new Date(),

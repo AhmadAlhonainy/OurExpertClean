@@ -49,6 +49,7 @@ export const experiences = pgTable("experiences", {
   city: text("city").notNull(),
   learningPoints: text("learning_points").array().notNull(),
   isActive: boolean("is_active").default(true).notNull(),
+  isHidden: boolean("is_hidden").default(false).notNull(),
   approvalStatus: approvalStatusEnum("approval_status").notNull().default("pending"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

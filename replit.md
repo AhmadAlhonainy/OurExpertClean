@@ -23,7 +23,7 @@ Preferred communication style: Simple, everyday language.
 -   **Authentication:** Session-based using Replit Auth (OpenID Connect) and Email/Password. PostgreSQL for session storage.
 -   **API:** RESTful endpoints (`/api/*`), JSON communication, Zod validation, authenticated routes with `isAuthenticated` middleware.
     -   **Key Endpoints:** `/api/experiences` (intelligent search), `/api/bookings`, `/api/availability`, `/api/reviews`, `/api/payments`, `/api/auth/user`.
-    -   **Admin Endpoints:** `/api/admin/bookings`, `/api/admin/users`, `/api/admin/experiences`, `/api/admin/complaints`, `/api/admin/revenue`, `/api/admin/bookings/:id/cancel`, `/api/admin/bookings/:id/suspend`.
+    -   **Admin Endpoints:** `/api/admin/bookings`, `/api/admin/users`, `/api/admin/experiences`, `/api/admin/complaints`, `/api/admin/revenue`, `/api/admin/bookings/:id/cancel`, `/api/admin/bookings/:id/suspend`, `/api/admin/experiences/:id/approve`, `/api/admin/experiences/:id/hide`.
 
 ### Database
 
@@ -53,6 +53,7 @@ Preferred communication style: Simple, everyday language.
 -   **Password Reset:** Secure password reset via email with 1-hour expiring tokens, full Arabic RTL support.
 -   **Mentor Profiles:** Public profiles showing all mentor experiences and reviews (accessible via `/mentor/:id`).
 -   **Admin Booking Management:** Admins can cancel or suspend bookings from the management dashboard.
+-   **Admin Experience Management:** Admins can delete or hide/unhide experiences. Hidden experiences are not displayed to learners.
 
 ### Email Configuration (SendGrid)
 
@@ -97,6 +98,13 @@ Preferred communication style: Simple, everyday language.
 -   **Google Fonts:** Inter (UI/body), Sora (display/headings).
 
 ## Recent Enhancements (Nov 30, 2025)
+
+### Admin Experience Management
+- Added admin control to delete experiences: `DELETE /api/admin/experiences/:id`
+- Added admin control to hide/unhide experiences: `PATCH /api/admin/experiences/:id/hide`
+- Added `isHidden` field to Experience schema (boolean, default: false)
+- New buttons in ManagerDashboard experiences table: "إخفاء" (Hide), "إظهار" (Unhide), "حذف" (Delete)
+- Dialog actions for experience management: hide/unhide and delete operations with instant UI feedback
 
 ### Mentor Profile & Booking Management
 - Created public mentor profile page (`/mentor/:id`) showing all experiences and reviews

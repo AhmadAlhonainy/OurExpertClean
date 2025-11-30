@@ -2020,6 +2020,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // DELETE /api/admin/experiences/:id - Delete experience
+  app.delete('/api/admin/experiences/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const experienceId = req.params.id;
+      const experience = await storage.getExperience(experienceId);
+      
+      if (!experience) {
+        return res.status(404).json({ message: "التجربة غير موجودة" });
+      }
+
+      // Delete the experience
+      await storage.deleteExperience(experienceId);
+      
+      res.json({ success: true, message: "تم حذف التجربة بنجاح" });
+    } catch (error) {
+      console.error("Error deleting experience:", error);
+      res.status(500).json({ message: "فشل في حذف التجربة" });
+    }
+  });
+
+  // PATCH /api/admin/experiences/:id/hide - Hide/unhide experience
+  app.patch('/api/admin/experiences/:id/hide', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const experienceId = req.params.id;
+      const { isHidden } = req.body;
+      
+      if (typeof isHidden !== 'boolean') {
+        return res.status(400).json({ message: "isHidden must be a boolean" });
+      }
+
+      const experience = await storage.getExperience(experienceId);
+      
+      if (!experience) {
+        return res.status(404).json({ message: "التجربة غير موجودة" });
+      }
+
+      const updated = await storage.updateExperience(experienceId, { isHidden });
+      
+      res.json({ 
+        success: true, 
+        message: isHidden ? "تم إخفاء التجربة" : "تم إظهار التجربة",
+        experience: updated 
+      });
+    } catch (error) {
+      console.error("Error hiding experience:", error);
+      res.status(500).json({ message: "فشل في تحديث حالة التجربة" });
+    }
+  });
+
   // GET /api/admin/complaints - Get all complaints
   app.get('/api/admin/complaints', isAuthenticated, isAdmin, async (req: any, res) => {
     try {

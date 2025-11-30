@@ -212,6 +212,37 @@ export default function ManagerDashboard() {
     },
   });
 
+  // Delete Experience Mutation
+  const deleteExperienceMutation = useMutation({
+    mutationFn: async (experienceId: string) => {
+      const response = await apiRequest('DELETE', `/api/admin/experiences/${experienceId}`, {});
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/experiences"] });
+      setSelectedExperience(null);
+      toast({ title: "تم حذف التجربة بنجاح" });
+    },
+    onError: () => {
+      toast({ title: "فشل حذف التجربة", variant: "destructive" });
+    },
+  });
+
+  // Hide/Unhide Experience Mutation
+  const hideExperienceMutation = useMutation({
+    mutationFn: async ({ id, isHidden }: { id: string; isHidden: boolean }) => {
+      const response = await apiRequest('PATCH', `/api/admin/experiences/${id}/hide`, { isHidden });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/experiences"] });
+      toast({ title: data.message });
+    },
+    onError: () => {
+      toast({ title: "فشل في تحديث التجربة", variant: "destructive" });
+    },
+  });
+
   if (userLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -519,14 +550,14 @@ export default function ManagerDashboard() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <div className="flex gap-2">
+                            <div className="flex gap-1 flex-wrap">
                               <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => setSelectedExperience(experience)}
                                 data-testid={`button-view-${experience.id}`}
                               >
-                                عرض التفاصيل
+                                عرض
                               </Button>
                               {experience.approvalStatus === 'pending' && (
                                 <>
@@ -539,7 +570,6 @@ export default function ManagerDashboard() {
                                     disabled={approveExperienceMutation.isPending}
                                     data-testid={`button-approve-${experience.id}`}
                                   >
-                                    <CheckCircle className="h-4 w-4 ml-2" />
                                     موافقة
                                   </Button>
                                   <Button
@@ -552,11 +582,28 @@ export default function ManagerDashboard() {
                                     disabled={approveExperienceMutation.isPending}
                                     data-testid={`button-reject-${experience.id}`}
                                   >
-                                    <XCircle className="h-4 w-4 ml-2" />
                                     رفض
                                   </Button>
                                 </>
                               )}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => hideExperienceMutation.mutate({ id: experience.id, isHidden: !(experience as any).isHidden })}
+                                disabled={hideExperienceMutation.isPending}
+                                data-testid={`button-hide-${experience.id}`}
+                              >
+                                {(experience as any).isHidden ? "إظهار" : "إخفاء"}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => deleteExperienceMutation.mutate(experience.id)}
+                                disabled={deleteExperienceMutation.isPending}
+                                data-testid={`button-delete-${experience.id}`}
+                              >
+                                حذف
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -767,7 +814,7 @@ export default function ManagerDashboard() {
                 </div>
               </div>
             )}
-            <DialogFooter className="gap-2">
+            <DialogFooter className="gap-2 flex-wrap">
               {selectedExperience && selectedExperience.approvalStatus === 'pending' && (
                 <>
                   <Button
@@ -779,7 +826,7 @@ export default function ManagerDashboard() {
                     data-testid="button-approve-dialog"
                   >
                     <CheckCircle className="h-4 w-4 ml-2" />
-                    موافقة على التجربة
+                    موافقة
                   </Button>
                   <Button
                     variant="destructive"
@@ -791,7 +838,31 @@ export default function ManagerDashboard() {
                     data-testid="button-reject-dialog"
                   >
                     <XCircle className="h-4 w-4 ml-2" />
-                    رفض التجربة
+                    رفض
+                  </Button>
+                </>
+              )}
+              {selectedExperience && (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      hideExperienceMutation.mutate({ id: selectedExperience.id, isHidden: !(selectedExperience as any).isHidden });
+                    }}
+                    disabled={hideExperienceMutation.isPending}
+                    data-testid="button-hide-dialog"
+                  >
+                    {(selectedExperience as any).isHidden ? "إظهار" : "إخفاء"}
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      deleteExperienceMutation.mutate(selectedExperience.id);
+                    }}
+                    disabled={deleteExperienceMutation.isPending}
+                    data-testid="button-delete-dialog"
+                  >
+                    حذف
                   </Button>
                 </>
               )}
