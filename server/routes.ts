@@ -1285,16 +1285,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const stripe = await getUncachableStripeClient();
       
-      // Create payment intent
+      // Create payment intent (SAR currency - Saudi Riyals)
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(parseFloat(booking.totalAmount) * 100), // Convert to cents
-        currency: 'usd',
+        amount: Math.round(parseFloat(booking.totalAmount) * 100), // Convert to halalas (SAR cents)
+        currency: 'sar',
         metadata: {
           bookingId: booking.id,
           learnerId: booking.learnerId,
           mentorId: booking.mentorId
         },
-        capture_method: 'manual' // Hold the funds
+        capture_method: 'manual' // Hold the funds for escrow
       });
 
       res.json({
@@ -1388,9 +1388,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // POST /api/payments/release - Release payment to mentor (after good review or deadline)
+  // POST /api/payments/release - Release payment to mentor (learner or admin)
+  // Learner can release if: they own the booking AND (good review >= 3 OR deadline passed)
+  // Admin can always release if conditions are met
+  // Security: Review must exist in database (server-side validated), no disputes/complaints pending
   app.post('/api/payments/release', isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
+      const currentUser = await storage.getUser(userId);
+      
+      if (!currentUser) {
+        return res.status(401).json({ message: "User not found" });
+      }
+      
       const { bookingId } = req.body;
       const booking = await storage.getBooking(bookingId);
       
@@ -1398,34 +1408,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Booking not found" });
       }
       
+      // Authorization: Only the booking's learner or admin can trigger release
+      const isAdmin = currentUser.role === 'admin';
+      const isBookingLearner = booking.learnerId === userId;
+      
+      if (!isAdmin && !isBookingLearner) {
+        return res.status(403).json({ message: "يمكن للمتعلم أو المسؤول فقط إتمام الدفع" });
+      }
+      
       if (booking.paymentStatus !== 'held') {
         return res.status(400).json({ message: "Payment is not in held status" });
       }
+      
+      // Security check: Prevent release if booking is under review (complaint pending)
+      if (booking.status === 'under_review') {
+        return res.status(400).json({ message: "هذا الحجز تحت المراجعة - لا يمكن إتمام الدفع حتى يتم البت فيه" });
+      }
 
       // Check if review exists with rating >= 3 or deadline has passed
+      // Review data is read from database (server-side) - not from client input
       const review = await storage.getReview(bookingId);
       const now = new Date();
-      const canRelease = (review && review.rating >= 3) || now > booking.reviewDeadline;
+      const deadlinePassed = now > new Date(booking.reviewDeadline);
+      const hasGoodReview = review && review.rating >= 3;
       
-      if (!canRelease) {
-        return res.status(400).json({ message: "Cannot release payment yet" });
+      // If learner is triggering, they must have submitted a review OR deadline passed
+      if (!isAdmin && !hasGoodReview && !deadlinePassed) {
+        return res.status(400).json({ message: "لا يمكن إتمام الدفع حتى الآن - يرجى تقديم تقييم أو انتظار انتهاء المهلة" });
+      }
+      
+      // Admin can release if deadline passed even without review
+      if (!hasGoodReview && !deadlinePassed) {
+        return res.status(400).json({ message: "لا يمكن إتمام الدفع قبل انتهاء مهلة المراجعة" });
       }
 
       const stripe = await getUncachableStripeClient();
       const mentor = await storage.getUser(booking.mentorId);
       
       if (!mentor?.stripeAccountId) {
-        return res.status(400).json({ message: "Mentor doesn't have a Stripe account" });
+        return res.status(400).json({ message: "المرشد لم يربط حسابه البنكي بعد" });
       }
 
-      // Create transfer to mentor
+      // Audit log for payment release
+      console.log(`[PAYMENT AUDIT] Release triggered - Booking: ${bookingId}, Actor: ${userId} (${isAdmin ? 'admin' : 'learner'}), Review: ${review?.rating || 'none'}, DeadlinePassed: ${deadlinePassed}`);
+
+      // Create transfer to mentor (SAR currency)
       const transfer = await stripe.transfers.create({
         amount: Math.round(parseFloat(booking.mentorAmount) * 100),
-        currency: 'usd',
+        currency: 'sar',
         destination: mentor.stripeAccountId,
         metadata: {
           bookingId: booking.id,
-          mentorId: booking.mentorId
+          mentorId: booking.mentorId,
+          learnerId: booking.learnerId,
+          triggeredBy: isAdmin ? 'admin' : 'learner',
+          reviewRating: review?.rating?.toString() || 'deadline_passed',
+          triggeredAt: new Date().toISOString()
         }
       });
 
@@ -1435,17 +1473,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'completed',
         paymentStatus: 'released'
       });
+      
+      console.log(`[PAYMENT AUDIT] Release completed - Booking: ${bookingId}, Transfer: ${transfer.id}`);
 
-      res.json({ success: true, message: "Payment released to mentor", transferId: transfer.id });
+      res.json({ success: true, message: "تم إيداع المبلغ للمرشد بنجاح", transferId: transfer.id });
     } catch (error) {
       console.error("Error releasing payment:", error);
-      res.status(500).json({ message: "Failed to release payment" });
+      res.status(500).json({ message: "فشل في إتمام الدفع" });
     }
   });
 
-  // POST /api/payments/refund - Refund payment (if review < 3 stars)
+  // POST /api/payments/refund - Refund payment (ADMIN ONLY - for bad reviews or disputes)
+  // Security: Admin must verify complaint before processing refund
   app.post('/api/payments/refund', isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
+      const currentUser = await storage.getUser(userId);
+      
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ message: "صلاحيات المسؤول مطلوبة للاسترداد" });
+      }
+      
       const { bookingId } = req.body;
       const booking = await storage.getBooking(bookingId);
       
@@ -1457,10 +1505,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Payment is not in held status" });
       }
 
-      // Check if review exists with rating < 3
+      // Check if review exists with rating < 3 or booking is under review
       const review = await storage.getReview(bookingId);
-      if (!review || review.rating >= 3) {
-        return res.status(400).json({ message: "Refund only available for reviews below 3 stars" });
+      const hasLowReview = review && review.rating < 3;
+      const isUnderReview = booking.status === 'under_review';
+      
+      if (!hasLowReview && !isUnderReview) {
+        return res.status(400).json({ message: "الاسترداد متاح فقط للتقييمات أقل من 3 نجوم أو الحجوزات تحت المراجعة" });
       }
 
       const stripe = await getUncachableStripeClient();
@@ -1469,22 +1520,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No payment intent found" });
       }
 
+      // Audit log for refund
+      console.log(`[PAYMENT AUDIT] Refund triggered - Booking: ${bookingId}, Admin: ${userId}, Review: ${review?.rating || 'none'}, UnderReview: ${isUnderReview}`);
+
       // Create refund
       const refund = await stripe.refunds.create({
         payment_intent: booking.stripePaymentIntentId,
         metadata: {
           bookingId: booking.id,
-          learnerId: booking.learnerId
+          learnerId: booking.learnerId,
+          mentorId: booking.mentorId,
+          adminId: userId,
+          reviewRating: review?.rating?.toString() || 'dispute',
+          refundedAt: new Date().toISOString()
         }
       });
 
       // Update booking
       await storage.refundPayment(bookingId);
+      
+      console.log(`[PAYMENT AUDIT] Refund completed - Booking: ${bookingId}, Refund: ${refund.id}`);
 
-      res.json({ success: true, message: "Payment refunded", refundId: refund.id });
+      res.json({ success: true, message: "تم استرداد المبلغ بنجاح", refundId: refund.id });
     } catch (error) {
       console.error("Error refunding payment:", error);
-      res.status(500).json({ message: "Failed to refund payment" });
+      res.status(500).json({ message: "فشل في استرداد المبلغ" });
     }
   });
 

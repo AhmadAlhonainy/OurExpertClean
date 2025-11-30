@@ -19,7 +19,7 @@ export async function processPayments() {
     for (const booking of awaitingReview) {
       try {
         // Auto-release payment since no review was submitted within 24h
-        await releasePaymentToMentor(booking.id);
+        await releasePaymentToMentor(booking.id, 'deadline_passed');
         console.log(`[Payment Processor] Auto-released payment for booking ${booking.id}`);
       } catch (error) {
         console.error(`[Payment Processor] Error processing booking ${booking.id}:`, error);
@@ -38,7 +38,7 @@ export async function processPayments() {
         
         // Only process rating >= 3 (rating < 3 goes to admin review)
         if (review.rating >= 3) {
-          await releasePaymentToMentor(booking.id);
+          await releasePaymentToMentor(booking.id, 'good_review');
           console.log(`[Payment Processor] Released payment for booking ${booking.id} (rating: ${review.rating})`);
         }
         // NOTE: rating < 3 is handled by admin via complaints system
@@ -54,12 +54,17 @@ export async function processPayments() {
   }
 }
 
-async function releasePaymentToMentor(bookingId: string) {
+async function releasePaymentToMentor(bookingId: string, reason: 'deadline_passed' | 'good_review') {
   const booking = await storage.getBooking(bookingId);
   if (!booking) throw new Error("Booking not found");
   
   if (booking.paymentStatus !== 'held') {
     throw new Error(`Cannot release payment with status: ${booking.paymentStatus}`);
+  }
+  
+  // Security: Do not auto-release if booking is under review (complaint pending)
+  if (booking.status === 'under_review') {
+    throw new Error("Booking is under review - cannot auto-release");
   }
   
   const stripe = await getUncachableStripeClient();
@@ -69,6 +74,9 @@ async function releasePaymentToMentor(bookingId: string) {
     throw new Error("Mentor doesn't have a Stripe account");
   }
   
+  // Audit log for auto-release
+  console.log(`[PAYMENT AUDIT] Auto-release triggered - Booking: ${bookingId}, Reason: ${reason}, Mentor: ${mentor.id}`);
+  
   // Create transfer to mentor
   const transfer = await stripe.transfers.create({
     amount: Math.round(parseFloat(booking.mentorAmount) * 100),
@@ -77,7 +85,10 @@ async function releasePaymentToMentor(bookingId: string) {
     metadata: {
       bookingId: booking.id,
       mentorId: booking.mentorId,
-      learnerId: booking.learnerId
+      learnerId: booking.learnerId,
+      triggeredBy: 'system_processor',
+      reason: reason,
+      triggeredAt: new Date().toISOString()
     }
   });
   
@@ -87,6 +98,8 @@ async function releasePaymentToMentor(bookingId: string) {
     status: 'completed',
     paymentStatus: 'released'
   });
+  
+  console.log(`[PAYMENT AUDIT] Auto-release completed - Booking: ${bookingId}, Transfer: ${transfer.id}`);
 }
 
 async function refundPaymentToLearner(bookingId: string) {
