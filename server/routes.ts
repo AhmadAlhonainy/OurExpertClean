@@ -1283,11 +1283,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "You can only pay for your own bookings" });
       }
 
+      const amountInHalalas = Math.round(parseFloat(booking.totalAmount) * 100);
+      
+      // Stripe minimum is ~50 cents USD = ~2 SAR (200 halalas)
+      const MIN_AMOUNT_HALALAS = 200;
+      if (amountInHalalas < MIN_AMOUNT_HALALAS) {
+        return res.status(400).json({ 
+          message: "المبلغ أقل من الحد الأدنى المطلوب (2 ريال سعودي)",
+          messageEn: "Amount is below minimum required (2 SAR)"
+        });
+      }
+
       const stripe = await getUncachableStripeClient();
       
       // Create payment intent (SAR currency - Saudi Riyals)
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(parseFloat(booking.totalAmount) * 100), // Convert to halalas (SAR cents)
+        amount: amountInHalalas,
         currency: 'sar',
         metadata: {
           bookingId: booking.id,
@@ -1301,9 +1312,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         clientSecret: paymentIntent.client_secret,
         paymentIntentId: paymentIntent.id
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating payment intent:", error);
-      res.status(500).json({ message: "Failed to create payment intent" });
+      
+      // Handle Stripe-specific errors
+      if (error.code === 'amount_too_small') {
+        return res.status(400).json({ 
+          message: "المبلغ أقل من الحد الأدنى المطلوب للدفع",
+          messageEn: "Amount is below minimum required for payment"
+        });
+      }
+      
+      res.status(500).json({ message: "فشل في إنشاء طلب الدفع" });
     }
   });
 
