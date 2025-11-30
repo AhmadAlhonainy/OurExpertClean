@@ -15,6 +15,9 @@ function getSendGridClient() {
   // Debug: Log API key format (first few characters only for security)
   const keyPrefix = apiKey.substring(0, 10);
   console.log(`🔑 SendGrid API Key prefix: ${keyPrefix}...`);
+  console.log(`📧 SendGrid FROM EMAIL: ${fromEmail}`);
+  console.log(`📧 Env SENDGRID_FROM_EMAIL: ${process.env.SENDGRID_FROM_EMAIL}`);
+  console.log(`📧 DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL}`);
   
   if (!apiKey.startsWith('SG.')) {
     console.error(`⚠️ Warning: API key does not start with "SG." - this may not be a valid SendGrid API key`);
