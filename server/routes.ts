@@ -1338,7 +1338,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      console.log("[Payment] Creating payment intent for booking:", bookingId, "amount:", amountInHalalas, "halalas");
+      
       const stripe = await getUncachableStripeClient();
+      
+      console.log("[Payment] Stripe client initialized, creating payment intent...");
       
       // Create payment intent (SAR currency - Saudi Riyals)
       const paymentIntent = await stripe.paymentIntents.create({
@@ -1351,6 +1355,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         capture_method: 'manual' // Hold the funds for escrow
       });
+      
+      console.log("[Payment] Payment intent created successfully:", paymentIntent.id);
 
       res.json({
         clientSecret: paymentIntent.client_secret,
@@ -1358,6 +1364,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error("Error creating payment intent:", error);
+      console.error("Error details:", {
+        code: error.code,
+        type: error.type,
+        message: error.message,
+        raw: error.raw
+      });
       
       // Handle Stripe-specific errors
       if (error.code === 'amount_too_small') {
@@ -1367,7 +1379,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      res.status(500).json({ message: "فشل في إنشاء طلب الدفع" });
+      res.status(500).json({ 
+        message: error.message || "فشل في إنشاء طلب الدفع",
+        code: error.code
+      });
     }
   });
 

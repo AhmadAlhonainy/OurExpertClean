@@ -183,6 +183,23 @@ export default function Payment() {
   const [stripeError, setStripeError] = useState(false);
   const [paymentIntentError, setPaymentIntentError] = useState<string | null>(null);
 
+  // Check if user is authenticated
+  const { data: user, isLoading: authLoading } = useQuery<any>({
+    queryKey: ["/api/auth/user"],
+  });
+
+  // Redirect to signin if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast({
+        title: "يجب تسجيل الدخول",
+        description: "الرجاء تسجيل الدخول لإتمام عملية الدفع",
+        variant: "destructive",
+      });
+      navigate("/signin");
+    }
+  }, [authLoading, user, navigate, toast]);
+
   const { data: booking, isLoading } = useQuery<Booking>({
     queryKey: [`/api/bookings/${bookingId}`],
     enabled: !!bookingId,
@@ -270,7 +287,7 @@ export default function Payment() {
     }, 3000);
   };
 
-  if (isLoading || !booking) {
+  if (authLoading || isLoading || !booking) {
     return (
       <div className="min-h-screen" dir="rtl">
         <Navbar />
@@ -283,6 +300,11 @@ export default function Payment() {
         <Footer />
       </div>
     );
+  }
+
+  // If not authenticated, show nothing (redirect will happen)
+  if (!user) {
+    return null;
   }
 
   if (paymentSuccess) {
