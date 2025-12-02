@@ -29,6 +29,7 @@ import {
   User,
   ChevronRight,
   Loader2,
+  CreditCard,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -252,6 +253,16 @@ export default function LearnerDashboard() {
                                 {booking.totalAmount} ريال
                               </div>
                               <div className="flex gap-2">
+                                {booking.paymentStatus === 'pending' && (
+                                  <Button 
+                                    size="sm" 
+                                    onClick={() => window.location.href = `/payment/${booking.id}`}
+                                    data-testid={`button-pay-${booking.id}`}
+                                  >
+                                    <CreditCard className="h-4 w-4 ml-2" />
+                                    الدفع الآن
+                                  </Button>
+                                )}
                                 <Button variant="outline" size="sm" data-testid={`button-details-${booking.id}`}>
                                   التفاصيل
                                 </Button>
