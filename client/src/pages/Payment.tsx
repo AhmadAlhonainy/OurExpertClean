@@ -16,10 +16,8 @@ import {
   Check,
   AlertCircle,
   Loader2,
-  Clock,
 } from "lucide-react";
 import BackButton from "@/components/BackButton";
-import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import type { Booking, Experience, Availability } from "@shared/schema";
@@ -184,7 +182,6 @@ export default function Payment() {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [stripeError, setStripeError] = useState(false);
   const [paymentIntentError, setPaymentIntentError] = useState<string | null>(null);
-  const [isPayingLater, setIsPayingLater] = useState(false);
 
   const { data: booking, isLoading } = useQuery<Booking>({
     queryKey: [`/api/bookings/${bookingId}`],
@@ -271,37 +268,6 @@ export default function Payment() {
     setTimeout(() => {
       navigate("/dashboard/learner");
     }, 3000);
-  };
-
-  const payLaterMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest('PATCH', `/api/bookings/${bookingId}`, {
-        paymentStatus: 'pending',
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "تم حفظ الحجز",
-        description: "يمكنك الدفع لاحقاً من لوحة التحكم الخاصة بك",
-      });
-      setTimeout(() => {
-        navigate("/dashboard/learner");
-      }, 2000);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "حدث خطأ",
-        description: error.message || "فشل في حفظ الحجز",
-        variant: "destructive",
-      });
-      setIsPayingLater(false);
-    },
-  });
-
-  const handlePayLater = () => {
-    setIsPayingLater(true);
-    payLaterMutation.mutate();
   };
 
   if (isLoading || !booking) {
@@ -401,13 +367,31 @@ export default function Payment() {
                   ) : stripeError || paymentIntentError ? (
                     <div className="py-8">
                       <div className="text-center mb-6">
-                        <AlertCircle className="h-12 w-12 text-orange-500 mx-auto mb-4" />
+                        <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
                         <h3 className="text-lg font-semibold mb-2">
-                          {paymentIntentError ? "خطأ في إنشاء طلب الدفع" : "نظام الدفع غير متاح حالياً"}
+                          خطأ في تحميل نظام الدفع
                         </h3>
-                        <p className="text-muted-foreground text-sm">
-                          {paymentIntentError || "نظام الدفع قيد التهيئة. يمكنك حفظ الحجز والدفع لاحقاً."}
+                        <p className="text-muted-foreground text-sm mb-4">
+                          {paymentIntentError || "حدث خطأ أثناء تهيئة نظام الدفع. يرجى المحاولة مرة أخرى."}
                         </p>
+                        <Button 
+                          onClick={() => {
+                            setStripeError(false);
+                            setPaymentIntentError(null);
+                            createPaymentIntent.mutate();
+                          }}
+                          disabled={createPaymentIntent.isPending}
+                          data-testid="button-retry-payment"
+                        >
+                          {createPaymentIntent.isPending ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin ml-2" />
+                              جاري المحاولة...
+                            </>
+                          ) : (
+                            "إعادة المحاولة"
+                          )}
+                        </Button>
                       </div>
                     </div>
                   ) : (
@@ -421,35 +405,6 @@ export default function Payment() {
                 </CardContent>
               </Card>
 
-              <Card className="mt-4">
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Clock className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <h3 className="font-semibold">الدفع لاحقاً</h3>
-                      <p className="text-sm text-muted-foreground">
-                        يمكنك حفظ الحجز والدفع في وقت لاحق من لوحة التحكم
-                      </p>
-                    </div>
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={handlePayLater}
-                    disabled={isPayingLater || payLaterMutation.isPending}
-                    data-testid="button-pay-later"
-                  >
-                    {isPayingLater || payLaterMutation.isPending ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin ml-2" />
-                        جاري الحفظ...
-                      </>
-                    ) : (
-                      "حفظ الحجز والدفع لاحقاً"
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
             </div>
 
             <div className="lg:col-span-1">
