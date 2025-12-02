@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle, XCircle, ExternalLink, CreditCard, AlertTriangle, RefreshCw, Building2 } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { apiRequest } from "@/lib/queryClient";
 
 interface StripeConnectStatus {
@@ -93,6 +94,11 @@ export default function MentorStripeConnect() {
 
   return (
     <div className="container max-w-2xl mx-auto py-8 px-4" dir="rtl">
+      {/* Back Button */}
+      <div className="mb-4">
+        <BackButton />
+      </div>
+      
       <div className="space-y-6">
         <div className="text-center">
           <CreditCard className="h-16 w-16 mx-auto text-primary mb-4" />

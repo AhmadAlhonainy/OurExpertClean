@@ -41,6 +41,7 @@ import {
   XCircle,
   TrendingUp,
 } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import type { Booking, User, Experience, Complaint } from "@shared/schema";
 
 interface PopulatedBooking extends Booking {
@@ -277,6 +278,11 @@ export default function ManagerDashboard() {
   return (
     <div className="min-h-screen bg-background p-6" dir="rtl">
       <div className="max-w-7xl mx-auto space-y-6">
+        {/* Back Button */}
+        <div>
+          <BackButton />
+        </div>
+        
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">لوحة التحكم</h1>

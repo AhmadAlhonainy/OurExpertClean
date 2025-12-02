@@ -30,8 +30,10 @@ import {
   User,
   Shield,
   Heart,
-  ChevronRight
+  ChevronRight,
+  ArrowRight
 } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import type { Experience, Availability, Review } from "@shared/schema";
@@ -180,6 +182,11 @@ export default function ExperienceDetail() {
       <Navbar />
       
       <main className="pt-16">
+        {/* Back Button */}
+        <div className="container mx-auto px-4 pt-4">
+          <BackButton />
+        </div>
+        
         {/* Breadcrumb */}
         <div className="bg-muted/30 border-b">
           <div className="container mx-auto px-4 py-3">

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { MapPin, Star, User, Search, Sparkles, Lightbulb } from "lucide-react";
+import BackButton from "@/components/BackButton";
 
 export default function BookExperience() {
   const { searchQuery, setSearchQuery, experiences, isLoading, clearSearch } = useExperienceSearch({
@@ -24,6 +25,11 @@ export default function BookExperience() {
 
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-6xl">
+          {/* Back Button */}
+          <div className="mb-6">
+            <BackButton />
+          </div>
+          
           {/* Hero Search Section */}
           <div className="mb-12 text-center">
             <div className="flex items-center justify-center gap-2 mb-4">

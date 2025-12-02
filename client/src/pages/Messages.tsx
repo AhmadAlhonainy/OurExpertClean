@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { MessageCircle, Send, Video, Calendar, Loader2, Sparkles } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 
@@ -271,6 +272,10 @@ export default function Messages() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
+      {/* Back Button */}
+      <div className="container pt-4">
+        <BackButton />
+      </div>
       <div className="max-w-7xl mx-auto p-4 md:p-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">

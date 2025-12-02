@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Star, MapPin, User, Mail, Briefcase } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import type { Experience, Review } from "@shared/schema";
@@ -78,6 +79,11 @@ export default function MentorProfile() {
 
       <main className="flex-1 py-8">
         <div className="container">
+          {/* Back Button */}
+          <div className="mb-4">
+            <BackButton />
+          </div>
+          
           {/* Profile Header */}
           <div className="bg-gradient-to-b from-primary/5 to-background rounded-lg border mb-8 p-8">
             <div className="flex items-start gap-6 mb-6">

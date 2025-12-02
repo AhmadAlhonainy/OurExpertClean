@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SiGoogle } from "react-icons/si";
 import { Loader2 } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
@@ -178,8 +179,14 @@ export default function SignIn() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 px-4" dir="rtl">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center space-y-2">
+      <div className="w-full max-w-md">
+        {/* Back Button */}
+        <div className="mb-4">
+          <BackButton />
+        </div>
+        
+        <Card>
+          <CardHeader className="text-center space-y-2">
           <div className="mx-auto w-12 h-12 bg-primary rounded-md flex items-center justify-center mb-2">
             <span className="text-primary-foreground font-bold text-2xl">خ</span>
           </div>
@@ -403,7 +410,8 @@ export default function SignIn() {
             </p>
           </div>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }

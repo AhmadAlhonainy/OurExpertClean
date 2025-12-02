@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Briefcase, Users, Settings } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import type { User } from "@shared/schema";
 
 export default function RoleSelection() {
@@ -37,6 +38,11 @@ export default function RoleSelection() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4" dir="rtl">
       <div className="w-full max-w-4xl space-y-8">
+        {/* Back Button */}
+        <div>
+          <BackButton />
+        </div>
+        
         {/* Header */}
         <div className="text-center space-y-4">
           <div className="inline-block">

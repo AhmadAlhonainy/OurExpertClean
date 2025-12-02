@@ -22,6 +22,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Calendar as CalendarIcon, Plus, X, Loader2, CreditCard, AlertTriangle } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 
@@ -359,6 +360,11 @@ export default function CreateExperience() {
       
       <main className="pt-24 pb-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Back Button */}
+          <div className="mb-4">
+            <BackButton />
+          </div>
+          
           <div className="mb-8">
             <h1 className="font-display font-bold text-3xl sm:text-4xl mb-2">
               شارك تجربتك

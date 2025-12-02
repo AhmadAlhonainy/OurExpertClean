@@ -44,6 +44,7 @@ import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import BackButton from "@/components/BackButton";
 
 interface BookingWithDetails extends Booking {
   experience?: Experience;
@@ -350,6 +351,11 @@ export default function MentorDashboard() {
       
       <main className="pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Back Button */}
+          <div className="mb-4">
+            <BackButton />
+          </div>
+          
           <div className="mb-8">
             <h1 className="font-display font-bold text-3xl sm:text-4xl mb-2">
               لوحة تحكم المرشد

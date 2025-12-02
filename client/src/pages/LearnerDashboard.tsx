@@ -31,6 +31,7 @@ import {
   Loader2,
   CreditCard,
 } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import type { Booking, Experience, Review } from "@shared/schema";
@@ -166,6 +167,11 @@ export default function LearnerDashboard() {
       
       <main className="pt-16 py-12">
         <div className="container mx-auto px-4 max-w-6xl">
+          {/* Back Button */}
+          <div className="mb-4">
+            <BackButton />
+          </div>
+          
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: 'Sora' }} data-testid="heading-dashboard">
               لوحة التحكم

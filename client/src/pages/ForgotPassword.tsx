@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, CheckCircle, ArrowRight } from "lucide-react";
+import BackButton from "@/components/BackButton";
 import { useLocation } from "wouter";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -89,8 +90,14 @@ export default function ForgotPassword() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 px-4" dir="rtl">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center space-y-2">
+      <div className="w-full max-w-md">
+        {/* Back Button */}
+        <div className="mb-4">
+          <BackButton />
+        </div>
+        
+        <Card>
+          <CardHeader className="text-center space-y-2">
           <div className="mx-auto w-12 h-12 bg-primary rounded-md flex items-center justify-center mb-2">
             <span className="text-primary-foreground font-bold text-2xl">خ</span>
           </div>
@@ -148,7 +155,8 @@ export default function ForgotPassword() {
             </Button>
           </div>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }
