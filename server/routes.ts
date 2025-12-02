@@ -596,6 +596,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ==================== BOOKING ROUTES ====================
 
+  // GET /api/bookings/learner - Get learner's bookings with populated details
+  app.get('/api/bookings/learner', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      console.log("📋 Fetching bookings for learner:", userId);
+      const bookings = await storage.getBookingsByLearner(userId);
+      console.log("📋 Found", bookings.length, "bookings for learner", userId);
+      
+      // Populate each booking with experience and user details
+      const populatedBookings = await Promise.all(
+        bookings.map(async (booking) => {
+          const experience = await storage.getExperience(booking.experienceId);
+          const learner = await storage.getUser(booking.learnerId);
+          const mentor = await storage.getUser(booking.mentorId);
+          return {
+            ...booking,
+            experience,
+            learner,
+            mentor
+          };
+        })
+      );
+      
+      res.json(populatedBookings);
+    } catch (error) {
+      console.error("Error fetching learner bookings:", error);
+      res.status(500).json({ message: "Failed to fetch bookings" });
+    }
+  });
+
   // GET /api/bookings - Get user's bookings with populated experience and learner/mentor details
   app.get('/api/bookings', isAuthenticated, async (req: any, res) => {
     try {
