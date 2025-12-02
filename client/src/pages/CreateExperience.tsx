@@ -218,6 +218,17 @@ export default function CreateExperience() {
       return;
     }
     
+    // Minimum price validation (2 SAR)
+    const price = parseFloat(formData.price);
+    if (isNaN(price) || price < 2) {
+      toast({
+        title: "السعر غير صالح",
+        description: "الحد الأدنى للسعر هو 2 ريال سعودي",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (formData.learningPoints.filter(p => p.trim() !== '').length === 0) {
       toast({
         title: "يرجى إضافة نقطة تعلم واحدة على الأقل",
@@ -579,11 +590,11 @@ export default function CreateExperience() {
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     className="text-right"
                     required
-                    min="1"
+                    min="2"
                     data-testid="input-price"
                   />
                   <p className="text-sm text-muted-foreground">
-                    السعر المقترح للجلسات يتراوح بين 150-500 ريال حسب التخصص (لا يشمل المشروبات)
+                    الحد الأدنى 2 ريال. السعر المقترح للجلسات يتراوح بين 150-500 ريال حسب التخصص
                   </p>
                 </div>
 

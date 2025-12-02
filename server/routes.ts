@@ -408,6 +408,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Note: Stripe Connect is now optional - mentors can create experiences without it
       // They will need to connect Stripe later to receive payments
 
+      // Validate minimum price (2 SAR)
+      const price = parseFloat(req.body.price);
+      if (isNaN(price) || price < 2) {
+        return res.status(400).json({ message: "الحد الأدنى للسعر هو 2 ريال سعودي" });
+      }
+
       console.log("📝 Creating experience - Received data:", JSON.stringify(req.body, null, 2));
 
       const validatedData = insertExperienceSchema.parse({
@@ -442,6 +448,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (experience.mentorId !== userId) {
         return res.status(403).json({ message: "You can only update your own experiences" });
+      }
+
+      // Validate minimum price if price is being updated (2 SAR)
+      if (req.body.price !== undefined) {
+        const price = parseFloat(req.body.price);
+        if (isNaN(price) || price < 2) {
+          return res.status(400).json({ message: "الحد الأدنى للسعر هو 2 ريال سعودي" });
+        }
       }
 
       const validatedData = insertExperienceSchema.partial().parse(req.body);
