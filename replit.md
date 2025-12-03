@@ -1,8 +1,14 @@
-# Experience Booking Platform
+# expa - Experience Booking Platform
 
 ## Overview
 
-This is an Arabic-language (RTL) experience booking marketplace connecting learners with mentors for one-on-one sessions. The platform facilitates booking, secure payments via Stripe, and incorporates a trust-based review system. It operates on a marketplace model, enabling mentors to list their expertise and learners to browse and book sessions using an intelligent search engine. Funds are held in escrow until session completion.
+**expa** is an Arabic-language (RTL) experience booking marketplace connecting learners with mentors for one-on-one sessions. The platform facilitates booking, secure payments via Stripe, and incorporates a trust-based review system. It operates on a marketplace model, enabling mentors to list their expertise and learners to browse and book sessions using an intelligent search engine. Funds are held in escrow until session completion.
+
+## Branding
+
+- **Name:** expa (English)
+- **Logo:** "eX" icon derived from the name, displayed in a rounded primary-colored square
+- **Tagline:** Experience meets expertise
 
 ## User Preferences
 

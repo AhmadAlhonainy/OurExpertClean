@@ -90,9 +90,9 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">خ</span>
+                <span className="text-primary-foreground font-bold text-lg tracking-tighter">eX</span>
               </div>
-              <span className="font-display font-bold text-xl">منصة الخبرات</span>
+              <span className="font-display font-bold text-xl tracking-tight">expa</span>
             </div>
 
             <div className="flex items-center gap-4">
@@ -111,7 +111,7 @@ export default function Footer() {
             </div>
 
             <p className="text-muted-foreground text-sm">
-              © 2024 منصة الخبرات. جميع الحقوق محفوظة.
+              © 2024 expa. جميع الحقوق محفوظة.
             </p>
           </div>
         </div>

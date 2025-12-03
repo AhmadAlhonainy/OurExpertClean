@@ -39,9 +39,9 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16 gap-4">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">خ</span>
+              <span className="text-primary-foreground font-bold text-lg tracking-tighter">eX</span>
             </div>
-            <span className="font-display font-bold text-xl">منصة الخبرات</span>
+            <span className="font-display font-bold text-xl tracking-tight">expa</span>
           </Link>
 
           <div className="hidden md:flex items-center flex-1 max-w-md mx-8">

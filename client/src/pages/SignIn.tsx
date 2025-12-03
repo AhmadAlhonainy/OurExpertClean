@@ -188,10 +188,10 @@ export default function SignIn() {
         <Card>
           <CardHeader className="text-center space-y-2">
           <div className="mx-auto w-12 h-12 bg-primary rounded-md flex items-center justify-center mb-2">
-            <span className="text-primary-foreground font-bold text-2xl">خ</span>
+            <span className="text-primary-foreground font-bold text-2xl tracking-tighter">eX</span>
           </div>
           <CardTitle className="text-2xl" style={{ fontFamily: 'Sora' }}>
-            منصة الخبرات
+            expa
           </CardTitle>
           <CardDescription>
             سجّل دخولك أو أنشئ حساباً جديداً

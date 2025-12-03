@@ -47,10 +47,10 @@ export default function RoleSelection() {
         <div className="text-center space-y-4">
           <div className="inline-block">
             <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center mb-4 mx-auto">
-              <span className="text-primary-foreground font-bold text-3xl">خ</span>
+              <span className="text-primary-foreground font-bold text-3xl tracking-tighter">eX</span>
             </div>
           </div>
-          <h1 className="text-4xl font-bold">مرحباً بك في منصة الخبرات</h1>
+          <h1 className="text-4xl font-bold">مرحباً بك في expa</h1>
           <p className="text-xl text-muted-foreground">اختر دورك للبدء</p>
         </div>
 
