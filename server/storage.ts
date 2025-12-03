@@ -46,7 +46,7 @@ export interface IStorage {
 
   // Experiences
   getExperience(id: string): Promise<Experience | undefined>;
-  getExperiences(filters?: { category?: string; city?: string; mentorId?: string; approvalStatus?: string; search?: string }): Promise<Experience[]>;
+  getExperiences(filters?: { category?: string; city?: string; cities?: string; mentorId?: string; approvalStatus?: string; search?: string }): Promise<Experience[]>;
   createExperience(experience: InsertExperience): Promise<Experience>;
   updateExperience(id: string, experience: Partial<InsertExperience>): Promise<Experience | undefined>;
   deleteExperience(id: string): Promise<boolean>;
@@ -236,14 +236,11 @@ export class MemStorage implements IStorage {
     return this.experiences.get(id);
   }
 
-  async getExperiences(filters?: { category?: string; city?: string; mentorId?: string; approvalStatus?: string; search?: string }): Promise<Experience[]> {
-    let experiences = Array.from(this.experiences.values()).filter(exp => exp.isActive);
+  async getExperiences(filters?: { category?: string; city?: string; cities?: string; mentorId?: string; approvalStatus?: string; search?: string }): Promise<Experience[]> {
+    let experiences = Array.from(this.experiences.values()).filter(exp => exp.isActive && !exp.isHidden);
     
     if (filters?.category) {
       experiences = experiences.filter(exp => exp.category === filters.category);
-    }
-    if (filters?.city) {
-      experiences = experiences.filter(exp => exp.city === filters.city);
     }
     if (filters?.mentorId) {
       experiences = experiences.filter(exp => exp.mentorId === filters.mentorId);
@@ -251,41 +248,50 @@ export class MemStorage implements IStorage {
     if (filters?.approvalStatus) {
       experiences = experiences.filter(exp => exp.approvalStatus === filters.approvalStatus);
     }
-    if (filters?.search) {
-      const searchTerm = filters.search.trim();
-      
-      // First try exact phrase match
-      let filtered = experiences.filter(exp => 
-        exp.title.includes(searchTerm) ||
-        exp.description.includes(searchTerm) ||
-        exp.category.includes(searchTerm) ||
-        exp.city.includes(searchTerm) ||
-        exp.learningPoints.some(point => point.includes(searchTerm))
+    
+    // Filter by city if provided (check in cities array)
+    if (filters?.cities || filters?.city) {
+      const cityFilter = (filters.cities || filters.city)!.toLowerCase();
+      experiences = experiences.filter(exp => 
+        exp.cities?.some(c => c.toLowerCase().includes(cityFilter))
       );
+    }
+    
+    if (filters?.search) {
+      const searchTerm = filters.search.trim().toLowerCase();
+      
+      // Helper function to check if any field matches the search term
+      const matchesSearch = (exp: any, term: string): boolean => {
+        if (exp.title?.toLowerCase().includes(term)) return true;
+        if (exp.description?.toLowerCase().includes(term)) return true;
+        if (exp.category?.toLowerCase().includes(term)) return true;
+        if (exp.cities?.some((c: string) => c.toLowerCase().includes(term))) return true;
+        if (exp.learningPoints?.some((p: string) => p.toLowerCase().includes(term))) return true;
+        if (exp.price?.toString().includes(term)) return true;
+        if (exp.duration?.toString().includes(term)) return true;
+        return false;
+      };
+      
+      // First try case-insensitive substring match with full search term
+      let filtered = experiences.filter(exp => matchesSearch(exp, searchTerm));
       
       // If no results, search by individual words (excluding stop words)
       if (filtered.length === 0) {
-        const stopWords = ['في', 'من', 'إلى', 'على', 'عن', 'مع', 'أو', 'و', 'أن', 'أريد', 'أبحث'];
+        const stopWords = ['في', 'من', 'إلى', 'على', 'عن', 'مع', 'أو', 'و', 'أن', 'أريد', 'أبحث', 'ال', 'لل', 'هل', 'هذا', 'هذه'];
         const searchWords = searchTerm.split(/\s+/).filter(word => 
-          word.length > 0 && !stopWords.includes(word)
+          word.length > 1 && !stopWords.includes(word)
         );
         
         if (searchWords.length > 0) {
           filtered = experiences.filter(exp =>
-            searchWords.some(word => 
-              exp.title.includes(word) ||
-              exp.description.includes(word) ||
-              exp.category.includes(word) ||
-              exp.city.includes(word) ||
-              exp.learningPoints.some(point => point.includes(word))
-            )
+            searchWords.some(word => matchesSearch(exp, word))
           );
         }
       }
       
-      // If still no results, show any 6 experiences
+      // If still no results, show all available experiences
       if (filtered.length === 0 && experiences.length > 0) {
-        filtered = experiences.slice(0, 6);
+        filtered = experiences;
       }
       
       experiences = filtered;
@@ -843,14 +849,11 @@ export class DbStorage implements IStorage {
     return result[0];
   }
 
-  async getExperiences(filters?: { category?: string; city?: string; mentorId?: string; approvalStatus?: string; search?: string }): Promise<Experience[]> {
-    const conditions = [eq(experiences.isActive, true)];
+  async getExperiences(filters?: { category?: string; city?: string; cities?: string; mentorId?: string; approvalStatus?: string; search?: string }): Promise<Experience[]> {
+    const conditions = [eq(experiences.isActive, true), eq(experiences.isHidden, false)];
     
     if (filters?.category) {
       conditions.push(eq(experiences.category, filters.category));
-    }
-    if (filters?.city) {
-      conditions.push(eq(experiences.city, filters.city));
     }
     if (filters?.mentorId) {
       conditions.push(eq(experiences.mentorId, filters.mentorId));
@@ -861,37 +864,50 @@ export class DbStorage implements IStorage {
     
     let result = await this.database.select().from(experiences).where(and(...conditions));
     
+    // Filter by city if provided (check in cities array)
+    if (filters?.cities || filters?.city) {
+      const cityFilter = (filters.cities || filters.city)!.toLowerCase();
+      result = result.filter(exp => 
+        exp.cities?.some(c => c.toLowerCase().includes(cityFilter))
+      );
+    }
+    
     // If search filter is provided, apply smart search
     if (filters?.search) {
       const searchTerm = filters.search.trim().toLowerCase();
       
-      // First try case-insensitive substring match
-      let filtered = result.filter(exp => {
-        const titleMatch = exp.title.toLowerCase().includes(searchTerm);
-        const descMatch = exp.description.toLowerCase().includes(searchTerm);
-        const catMatch = exp.category.toLowerCase().includes(searchTerm);
-        const cityMatch = exp.city.toLowerCase().includes(searchTerm);
-        const pointsMatch = exp.learningPoints.some(point => point.toLowerCase().includes(searchTerm));
-        return titleMatch || descMatch || catMatch || cityMatch || pointsMatch;
-      });
+      // Helper function to check if any field matches the search term
+      const matchesSearch = (exp: any, term: string): boolean => {
+        // Check title
+        if (exp.title?.toLowerCase().includes(term)) return true;
+        // Check description
+        if (exp.description?.toLowerCase().includes(term)) return true;
+        // Check category
+        if (exp.category?.toLowerCase().includes(term)) return true;
+        // Check cities array
+        if (exp.cities?.some((c: string) => c.toLowerCase().includes(term))) return true;
+        // Check learning points array
+        if (exp.learningPoints?.some((p: string) => p.toLowerCase().includes(term))) return true;
+        // Check price (convert to string for matching)
+        if (exp.price?.toString().includes(term)) return true;
+        // Check duration
+        if (exp.duration?.toString().includes(term)) return true;
+        return false;
+      };
+      
+      // First try case-insensitive substring match with full search term
+      let filtered = result.filter(exp => matchesSearch(exp, searchTerm));
       
       // If no results, search by individual words (excluding stop words)
       if (filtered.length === 0) {
-        const stopWords = ['في', 'من', 'إلى', 'على', 'عن', 'مع', 'أو', 'و', 'أن', 'أريد', 'أبحث'];
+        const stopWords = ['في', 'من', 'إلى', 'على', 'عن', 'مع', 'أو', 'و', 'أن', 'أريد', 'أبحث', 'ال', 'لل', 'هل', 'هذا', 'هذه'];
         const searchWords = searchTerm.split(/\s+/).filter(word => 
-          word.length > 0 && !stopWords.includes(word)
+          word.length > 1 && !stopWords.includes(word)
         );
         
         if (searchWords.length > 0) {
           filtered = result.filter(exp =>
-            searchWords.some(word => {
-              const titleMatch = exp.title.toLowerCase().includes(word);
-              const descMatch = exp.description.toLowerCase().includes(word);
-              const catMatch = exp.category.toLowerCase().includes(word);
-              const cityMatch = exp.city.toLowerCase().includes(word);
-              const pointsMatch = exp.learningPoints.some(point => point.toLowerCase().includes(word));
-              return titleMatch || descMatch || catMatch || cityMatch || pointsMatch;
-            })
+            searchWords.some(word => matchesSearch(exp, word))
           );
         }
       }
