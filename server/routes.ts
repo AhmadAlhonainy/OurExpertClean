@@ -767,14 +767,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (mentor?.email) {
           const sessionDateFormatted = format(new Date(availability.date), "EEEE d MMMM yyyy - h:mm a", { locale: ar });
           
-          await sendNewBookingNotificationToMentor({
+          const emailSent = await sendNewBookingNotificationToMentor({
             mentorEmail: mentor.email,
             mentorName: mentor.name || 'المرشد',
             learnerName: learner?.name || 'المتعلم',
             experienceTitle: experience.title,
             sessionDate: sessionDateFormatted,
           });
-          console.log(`📧 New booking notification sent to mentor: ${mentor.email}`);
+          if (emailSent) {
+            console.log(`📧 New booking notification sent to mentor: ${mentor.email}`);
+          } else {
+            console.log(`⚠️ Failed to send booking notification to mentor: ${mentor.email}`);
+          }
         }
       } catch (emailError) {
         console.error("Error sending new booking notification email:", emailError);
